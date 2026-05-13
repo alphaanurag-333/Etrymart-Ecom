@@ -1,6 +1,7 @@
 const express = require("express");
 
 const adminAuthRoutes = require("./adminRoutes/authRoutes");
+const adminAppConfigRoutes = require("./adminRoutes/appConfigRoutes");
 const adminAttributeRoutes = require("./adminRoutes/attributeRoutes");
 const adminBannerRoutes = require("./adminRoutes/bannerRoutes");
 const adminCategoryRoutes = require("./adminRoutes/categoryRoutes");
@@ -17,6 +18,7 @@ const userMiscRoutes = require("./userRoutes/miscRoutes");
 const router = express.Router();
 
 router.use("/admin/auth", adminAuthRoutes);
+router.use("/admin/app-config", adminAppConfigRoutes);
 router.use("/admin/attributes", adminAttributeRoutes);
 router.use("/admin/banners", adminBannerRoutes);
 router.use("/admin/categories", adminCategoryRoutes);

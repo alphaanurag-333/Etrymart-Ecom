@@ -1,0 +1,344 @@
+<div class="page-header">
+  <div class="page-header__lead">
+    <h1 class="heading-2">Application settings</h1>
+    <p class="text-muted text-sm page-header__sub">Business Setting</p>
+  </div>
+</div>
+
+@if (!hasExistingConfig()) {
+  <div class="alert alert-info border-0 shadow-sm mb-3" role="status">
+    No app config found yet. Fill the form and click <strong>Save settings</strong> to create it.
+  </div>
+}
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="card shadow-sm border-0 app-config-card">
+    <div class="card-body p-0">
+      <nav class="app-config-tabs" aria-label="Settings sections">
+        @for (t of tabs; track t.id) {
+          <button
+            type="button"
+            class="app-config-tabs__btn"
+            [class.app-config-tabs__btn--active]="activeTab() === t.id"
+            (click)="setTab(t.id)"
+          >
+            {{ t.label }}
+          </button>
+        }
+      </nav>
+
+      @if (loading()) {
+        <div class="p-4 text-muted small">Loading settings…</div>
+      } @else {
+        <div class="app-config-body">
+          @switch (activeTab()) {
+            @case ('app') {
+              <p class="app-config-hint text-muted small mb-3">Core storefront identity and commission rates.</p>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-app-name">App name <span class="text-danger">*</span></label>
+                  <input
+                    id="ac-app-name"
+                    class="form-control app-config-input"
+                    formControlName="app_name"
+                    maxlength="100"
+                    autocomplete="organization"
+                  />
+                  <div class="app-config-counter">{{ form.controls.app_name.value.length }}/100</div>
+                  @if (form.controls.app_name.touched && form.controls.app_name.invalid) {
+                    <div class="text-danger small">Required, max 100 characters.</div>
+                  }
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-vendor-comm">Vendor commission (%) <span class="text-danger">*</span></label>
+                  <input
+                    id="ac-vendor-comm"
+                    type="number"
+                    class="form-control app-config-input"
+                    formControlName="vendorCommission"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                  />
+                  @if (form.controls.vendorCommission.touched && form.controls.vendorCommission.invalid) {
+                    <div class="text-danger small">0–100</div>
+                  }
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-email">Support email <span class="text-danger">*</span></label>
+                  <input
+                    id="ac-email"
+                    type="email"
+                    class="form-control app-config-input"
+                    formControlName="app_email"
+                    maxlength="120"
+                    autocomplete="email"
+                  />
+                  <div class="app-config-counter">{{ form.controls.app_email.value.length }}/120</div>
+                  @if (form.controls.app_email.touched && form.controls.app_email.invalid) {
+                    <div class="text-danger small">Valid email required.</div>
+                  }
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-mobile">Support mobile <span class="text-danger">*</span></label>
+                  <input
+                    id="ac-mobile"
+                    class="form-control app-config-input"
+                    formControlName="app_mobile"
+                    maxlength="20"
+                    autocomplete="tel"
+                  />
+                  @if (form.controls.app_mobile.touched && form.controls.app_mobile.invalid) {
+                    <div class="text-danger small">Required.</div>
+                  }
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-short">Short app detail</label>
+                  <input id="ac-short" class="form-control app-config-input" formControlName="app_detail" maxlength="160" />
+                  <div class="app-config-counter">{{ form.controls.app_detail.value.length }}/160</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="ac-footer">Footer text <span class="text-danger">*</span></label>
+                  <textarea
+                    id="ac-footer"
+                    class="form-control app-config-input"
+                    formControlName="app_footer_text"
+                    rows="3"
+                    maxlength="180"
+                  ></textarea>
+                  <div class="app-config-counter">{{ form.controls.app_footer_text.value.length }}/180</div>
+                  @if (form.controls.app_footer_text.touched && form.controls.app_footer_text.invalid) {
+                    <div class="text-danger small">Required, max 180 characters.</div>
+                  }
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label fw-semibold" for="ac-free-coin">Free coin (wallet signup / promo)</label>
+                  <input
+                    id="ac-free-coin"
+                    type="number"
+                    class="form-control app-config-input"
+                    formControlName="free_coin"
+                    min="0"
+                    max="999999999"
+                    step="1"
+                  />
+                  @if (form.controls.free_coin.touched && form.controls.free_coin.invalid) {
+                    <div class="text-danger small">Must be 0 or greater.</div>
+                  }
+                </div>
+                <div class="col-12 col-md-6 col-lg-4 d-flex align-items-end pb-2">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input attr-switch" type="checkbox" formControlName="defaultTheme" id="ac-default-theme" />
+                    <label class="form-check-label fw-semibold" for="ac-default-theme">Default theme</label>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label fw-semibold" for="ac-website-theme">Website theme key</label>
+                  <input
+                    id="ac-website-theme"
+                    class="form-control app-config-input"
+                    formControlName="websiteTheme"
+                    maxlength="120"
+                    placeholder="e.g. default"
+                  />
+                  <div class="app-config-counter">{{ form.controls.websiteTheme.value.length }}/120</div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-header-color">Header text color</label>
+                  <input
+                    id="ac-header-color"
+                    class="form-control app-config-input"
+                    formControlName="headerTextColor"
+                    maxlength="32"
+                    placeholder="#ffffff"
+                  />
+                  <div class="app-config-counter">{{ form.controls.headerTextColor.value.length }}/32</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="ac-app-details">App details (long HTML / policies)</label>
+                  <textarea
+                    id="ac-app-details"
+                    class="form-control app-config-input font-monospace small"
+                    formControlName="app_details"
+                    rows="10"
+                    maxlength="50000"
+                    placeholder="Optional rich text or HTML…"
+                  ></textarea>
+                  <div class="app-config-counter">{{ form.controls.app_details.value.length }}/50000</div>
+                </div>
+              </div>
+            }
+            @case ('media') {
+         
+              <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-3">
+                  <div class="app-config-media-card">
+                    <div class="fw-semibold">Admin logo</div>
+                    <p class="text-muted small mb-2">Shown in admin UI</p>
+                    <input type="file" class="form-control form-control-sm mb-2" accept="image/*" (change)="onMediaFile('admin', $event)" />
+                   
+                    <div class="app-config-media-preview">
+                      @if (adminLogoBlob() || assetUrl(form.controls.admin_logo.value)) {
+                        <img [src]="adminLogoBlob() || assetUrl(form.controls.admin_logo.value)" alt="Admin logo preview" />
+                      } @else {
+                        <span class="text-muted small">No preview</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <div class="app-config-media-card">
+                    <div class="fw-semibold">Storefront logo</div>
+                    <p class="text-muted small mb-2">Customer-facing app</p>
+                    <input type="file" class="form-control form-control-sm mb-2" accept="image/*" (change)="onMediaFile('user', $event)" />
+                  
+                    <div class="app-config-media-preview">
+                      @if (userLogoBlob() || assetUrl(form.controls.user_logo.value)) {
+                        <img [src]="userLogoBlob() || assetUrl(form.controls.user_logo.value)" alt="Storefront logo preview" />
+                      } @else {
+                        <span class="text-muted small">No preview</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <div class="app-config-media-card">
+                    <div class="fw-semibold">Favicon</div>
+                    <p class="text-muted small mb-2">ICO or PNG</p>
+                    <input type="file" class="form-control form-control-sm mb-2" accept="image/*,.ico" (change)="onMediaFile('favicon', $event)" />
+                   
+                    <div class="app-config-media-preview app-config-media-preview--sm">
+                      @if (faviconBlob() || assetUrl(form.controls.favicon.value)) {
+                        <img [src]="faviconBlob() || assetUrl(form.controls.favicon.value)" alt="Favicon preview" />
+                      } @else {
+                        <span class="text-muted small">No preview</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <div class="app-config-media-card">
+                    <div class="fw-semibold">Website theme logo</div>
+                    <p class="text-muted small mb-2">Theme / marketing branding</p>
+                    <input type="file" class="form-control form-control-sm mb-2" accept="image/*" (change)="onMediaFile('themeLogo', $event)" />
+                    <!-- <input class="form-control app-config-input mb-2" formControlName="website_theme_logo" placeholder="/uploads/… or https://…" /> -->
+                    <div class="app-config-media-preview">
+                      @if (websiteThemeLogoBlob() || assetUrl(form.controls.website_theme_logo.value)) {
+                        <img [src]="websiteThemeLogoBlob() || assetUrl(form.controls.website_theme_logo.value)" alt="Theme logo preview" />
+                      } @else {
+                        <span class="text-muted small">No preview</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+            @case ('location') {
+              <p class="app-config-hint text-muted small mb-3">Physical address and map coordinates (strings as stored by the API).</p>
+              <div class="row g-3 align-items-start">
+                <div class="col-12 col-lg-6">
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold" for="ac-lat">Latitude</label>
+                    <input id="ac-lat" class="form-control app-config-input" formControlName="latitude" maxlength="20" />
+                    <div class="app-config-counter">{{ form.controls.latitude.value.length }}/20</div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold" for="ac-lng">Longitude</label>
+                    <input id="ac-lng" class="form-control app-config-input" formControlName="longitude" maxlength="20" />
+                    <div class="app-config-counter">{{ form.controls.longitude.value.length }}/20</div>
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label fw-semibold" for="ac-address">Address</label>
+                    <textarea
+                      id="ac-address"
+                      class="form-control app-config-input"
+                      formControlName="address"
+                      rows="4"
+                      maxlength="300"
+                    ></textarea>
+                    <div class="app-config-counter">{{ form.controls.address.value.length }}/300</div>
+                  </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                  <div class="fw-semibold mb-2">Map preview</div>
+                  <div class="app-config-map-wrap rounded overflow-hidden border">
+                    @if (mapPreviewSrc(); as src) {
+                      <iframe
+                        title="Map preview"
+                        class="app-config-map"
+                        [src]="src"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                      ></iframe>
+                    } @else {
+                      <div class="app-config-map-placeholder text-muted small">Enter valid latitude and longitude to preview the map.</div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+            @case ('social') {
+              <p class="app-config-hint text-muted small mb-3">Public profile links (optional).</p>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-fb">Facebook</label>
+                  <input id="ac-fb" class="form-control app-config-input" formControlName="facebook" maxlength="200" placeholder="https://…" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-tw">Twitter / X</label>
+                  <input id="ac-tw" class="form-control app-config-input" formControlName="twitter" maxlength="200" placeholder="https://…" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-ig">Instagram</label>
+                  <input id="ac-ig" class="form-control app-config-input" formControlName="instagram" maxlength="200" placeholder="https://…" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold" for="ac-li">LinkedIn</label>
+                  <input id="ac-li" class="form-control app-config-input" formControlName="linkedin" maxlength="200" placeholder="https://…" />
+                </div>
+              </div>
+            }
+            @case ('payment') {
+              <p class="app-config-hint text-muted small mb-3">
+                Choose which checkout options are available. Changes apply after you save at the bottom of the page.
+              </p>
+              <div class="d-flex flex-column gap-3">
+                <div class="app-config-pay-row">
+                  <div>
+                    <div class="fw-semibold">Cash on delivery</div>
+                    <p class="text-muted small mb-0">Customer pays when the order is delivered</p>
+                  </div>
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input attr-switch" type="checkbox" formControlName="payCod" role="switch" aria-label="Cash on delivery" />
+                  </div>
+                </div>
+                <div class="app-config-pay-row">
+                  <div>
+                    <div class="fw-semibold">Online payment</div>
+                    <p class="text-muted small mb-0">Cards, UPI, net banking, etc.</p>
+                  </div>
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input attr-switch" type="checkbox" formControlName="payOnline" role="switch" aria-label="Online payment" />
+                  </div>
+                </div>
+                <div class="app-config-pay-row">
+                  <div>
+                    <div class="fw-semibold">Wallet</div>
+                    <p class="text-muted small mb-0">Pay using in-app wallet balance</p>
+                  </div>
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input attr-switch" type="checkbox" formControlName="payWallet" role="switch" aria-label="Wallet" />
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="app-config-footer">
+          <button type="submit" class="btn-admin-primary px-4 py-2" [disabled]="saving() || loading()">Save settings</button>
+        </div>
+      }
+    </div>
+  </div>
+</form>

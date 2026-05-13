@@ -99,6 +99,12 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: 'business-setup', label: 'Business setup', path: '/admin/business-setup', icon: 'briefcase' },
       { id: 'static-pages', label: 'Static pages', path: '/admin/static-pages', icon: 'file-text' },
+      {
+        id: 'app-config',
+        label: 'Application settings',
+        path: '/admin/app-config',
+        icon: 'settings',
+      },
     ],
   },
 ];

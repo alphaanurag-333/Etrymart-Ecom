@@ -1,25 +1,5 @@
 const mongoose = require("mongoose");
 
-const paymentGatewaySchema = new mongoose.Schema(
-  {
-    provider: {
-      type: String,
-      enum: ["razorpay", "stripe", "paypal", "paytm"],
-      required: true,
-    },
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
-    credentials: {
-      key_id: { type: String, default: "" },
-      key_secret: { type: String, default: "" },
-      webhook_secret: { type: String, default: "" },
-      merchant_id: { type: String, default: "" },
-    },
-  },
-  { _id: false }
-);
 
 const paymentMethodSchema = new mongoose.Schema(
   {
@@ -88,7 +68,10 @@ const appConfigSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
+    website_theme_logo:{
+      type: String,
+      trim: true
+    },
     address: {
       type: String,
       default: "",
@@ -127,17 +110,34 @@ const appConfigSchema = new mongoose.Schema(
       default: "",
     },
 
+    free_coin:{
+      type: Number,
+      default: 0,
+    },
+
+    defaultTheme: {
+      type: Boolean,
+      default: false
+    },
+    websiteTheme: {
+      type: String,
+      trim: true
+    },
+    website_theme_logo:{
+      type: String,
+      trim: true
+    },
+    headerTextColor: {
+      type: String,
+      trim: true
+    },
+
     payment_methods: {
       type: [paymentMethodSchema],
       default: () => [
         { type: "cod", isActive: true },
         { type: "online", isActive: true },
       ],
-    },
-
-    payment_gateways: {
-      type: [paymentGatewaySchema],
-      default: () => [],
     },
     commissions: {
       type: [commissionSchema],

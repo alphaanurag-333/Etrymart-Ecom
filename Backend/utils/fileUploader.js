@@ -10,6 +10,9 @@ const allowedTypes = [
   "image/jpg",
   "image/gif",
   "image/webp",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+  "image/svg+xml",
   // Video
   "video/mp4",
   "video/quicktime",

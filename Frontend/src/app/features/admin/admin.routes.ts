@@ -197,9 +197,17 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'static-pages',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/admin-pages/admin-static-pages').then((m) => m.AdminStaticPagesPage),
     title: 'Static pages · Admin',
     data: { breadcrumb: 'Static pages' },
+  },
+  {
+    path: 'app-config',
+    loadComponent: () =>
+      import('./pages/admin-app-config/admin-app-config').then((m) => m.AdminAppConfigPage),
+    title: 'Application settings · Admin',
+    data: { breadcrumb: 'Application settings' },
   },
   {
     path: 'profile',
