@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment (secrets — keep .env.example committed if you use one)
+.env
+.env.*
+!.env.example
+
+# Firebase / Google Cloud service account keys (never commit)
+**/*firebase-adminsdk*.json
+
+# Runtime / local data
+*.pid
+*.seed
+*.pid.lock
+pids/
+
+# Test & coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Build output
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+
+# Optional: local uploads (multer / static user content)
+uploads/
+public/uploads/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# VS Code — ignore local overrides; uncomment next line to ignore all VS Code settings
+# .vscode/
+
+# Debug
+npm-shrinkwrap.json.backup
+
+# Misc
+*.local
+.turbo/
+.vercel/
