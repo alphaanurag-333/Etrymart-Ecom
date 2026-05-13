@@ -64,7 +64,13 @@
           [attr.aria-expanded]="userOpen()"
           (click)="toggleUser()"
         >
-          <span class="avatar">{{ adminInitial() }}</span>
+          <span class="avatar">
+            @if (adminProfileImageUrl(); as imageUrl) {
+              <img [src]="imageUrl" alt="Admin profile" />
+            } @else {
+              {{ adminInitial() }}
+            }
+          </span>
         </button>
         @if (userOpen()) {
           <div class="dropdown" role="menu">

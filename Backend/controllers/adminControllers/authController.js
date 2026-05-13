@@ -66,6 +66,7 @@ exports.register = asyncHandler(async (req, res) => {
   const { token, refreshToken } = issueAuthTokens(admin);
 
   res.status(201).json({
+    status: "true",
     message: "Registered successfully",
     user: toPublicProfile(admin),
     token,
@@ -94,6 +95,7 @@ exports.login = asyncHandler(async (req, res) => {
   const { token, refreshToken } = issueAuthTokens(admin);
 
   res.json({
+    status: "true",
     message: "Login successful",
     user: toPublicProfile(admin),
     token,
@@ -127,6 +129,7 @@ exports.refresh = asyncHandler(async (req, res) => {
 
   const tokens = issueAuthTokens(admin);
   res.json({
+    status: "true",
     message: "Token refreshed",
     ...tokens,
   });
@@ -141,6 +144,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   const admin = await Admin.findOne({ email: String(email).toLowerCase() });
   if (!admin) {
     res.json({
+      status: "true",
       message:
         "If an account exists for that email, password reset instructions have been sent.",
     });
@@ -153,8 +157,8 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   await admin.save();
 
   res.json({
-    message:
-      "If an account exists for that email, password reset instructions have been sent.",
+    status: "true",
+    message: "If an account exists for that email, password reset instructions have been sent.",
     resetToken: process.env.NODE_ENV === "development" ? resetToken : undefined,
   });
 });
@@ -189,7 +193,7 @@ exports.changePassword = asyncHandler(async (req, res) => {
   admin.resetPasswordExpire = undefined;
   await admin.save();
 
-  res.json({ message: "Password updated successfully" });
+  res.json({ status: "true", message: "Password updated successfully" });
 });
 
 exports.resetPassword = asyncHandler(async (req, res) => {
@@ -216,7 +220,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 });
 
 exports.getMe = asyncHandler(async (req, res) => {
-  res.json({ user: toPublicProfile(req.user) });
+  res.json({ status: "true", message: "Profile fetched successfully", user: toPublicProfile(req.user) });
 });
 
 exports.updateMe = asyncHandler(async (req, res) => {
@@ -250,6 +254,7 @@ exports.updateMe = asyncHandler(async (req, res) => {
   await admin.save();
   const fresh = await Admin.findById(admin._id).select("-password");
   res.json({
+    status: "true",
     message: "Profile updated",
     user: toPublicProfile(fresh),
   });
@@ -262,5 +267,5 @@ exports.deleteMe = asyncHandler(async (req, res) => {
   }
   deleteUploadFileByPublicUrl(admin.profileImage);
   await Admin.findByIdAndDelete(req.user._id);
-  res.json({ message: "Account deleted" });
+  res.json({ status: "true", message: "Account deleted" });
 });

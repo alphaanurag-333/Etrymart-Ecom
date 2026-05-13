@@ -1,9 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, tap, throwError } from 'rxjs';
+import { Observable, catchError, switchMap, tap, throwError } from 'rxjs';
+import { API_URL } from '../../config/api.config';
 
-const API_ORIGIN = 'http://localhost:5000';
-const API_BASE_URL = 'http://localhost:5000/api';
 const ADMIN_KEY = 'etrymart_admin_session';
 const SELLER_KEY = 'etrymart_seller_auth';
 
@@ -28,9 +27,16 @@ export interface AdminAuthResponse {
   refreshToken: string;
 }
 
+export interface AdminRefreshResponse {
+  message: string;
+  token: string;
+  refreshToken: string;
+}
+
 export interface AdminProfileUpdate {
   name: string;
   phone?: string | null;
+  profileImage?: File;
 }
 
 export interface AdminPasswordUpdate {
@@ -75,30 +81,48 @@ export class AuthService {
   readonly adminToken = computed(() => this.adminSession()?.token ?? null);
   readonly isAdmin = computed(() => Boolean(this.adminSession()?.token));
   readonly isSeller = computed(() => this.seller());
-  readonly adminApiOrigin = API_ORIGIN;
 
   loginAdmin(credentials: AdminLoginCredentials): Observable<AdminAuthResponse> {
-    return this.http.post<AdminAuthResponse>(`${API_BASE_URL}/admin/auth/login`, credentials).pipe(
+    return this.http.post<AdminAuthResponse>(`${API_URL}/admin/auth/login`, credentials).pipe(
       tap((response) => {
-        const session: AdminSession = {
+        this.setAdminSession({
           user: response.user,
           token: response.token,
           refreshToken: response.refreshToken,
-        };
-        sessionStorage.setItem(ADMIN_KEY, JSON.stringify(session));
-        this.adminSession.set(session);
+        });
       }),
     );
   }
 
-  updateAdminProfile(profile: AdminProfileUpdate): Observable<{ message: string; user: AdminUser }> {
-    const token = this.adminToken();
-    if (!token) return throwError(() => new Error('Admin authentication required.'));
+  refreshAdminToken(): Observable<AdminRefreshResponse> {
+    const session = this.adminSession();
+    if (!session?.refreshToken) {
+      return throwError(() => new Error('Admin refresh token is missing.'));
+    }
 
     return this.http
-      .patch<{ message: string; user: AdminUser }>(`${API_BASE_URL}/admin/auth/me`, profile, {
-        headers: { Authorization: `Bearer ${token}` },
+      .post<AdminRefreshResponse>(`${API_URL}/admin/auth/refresh`, {
+        refreshToken: session.refreshToken,
       })
+      .pipe(
+        tap((response) => {
+          this.updateAdminTokens(response.token, response.refreshToken);
+        }),
+        catchError((error: unknown) => {
+          this.logoutAdmin();
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  updateAdminProfile(profile: AdminProfileUpdate): Observable<{ message: string; user: AdminUser }> {
+    const body = this.createAdminProfileBody(profile);
+
+    return this.withFreshAdminToken((token) =>
+      this.http.patch<{ message: string; user: AdminUser }>(`${API_URL}/admin/auth/me`, body, {
+        headers: this.getAdminAuthHeaders(token),
+      }),
+    )
       .pipe(
         tap((response) => {
           this.updateAdminUser(response.user);
@@ -107,15 +131,14 @@ export class AuthService {
   }
 
   changeAdminPassword(passwords: AdminPasswordUpdate): Observable<{ message: string }> {
-    const token = this.adminToken();
-    if (!token) return throwError(() => new Error('Admin authentication required.'));
-
-    return this.http.patch<{ message: string }>(
-      `${API_BASE_URL}/admin/auth/me/password`,
-      passwords,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+    return this.withFreshAdminToken((token) =>
+      this.http.patch<{ message: string }>(
+        `${API_URL}/admin/auth/me/password`,
+        passwords,
+        {
+          headers: this.getAdminAuthHeaders(token),
+        },
+      ),
     );
   }
 
@@ -134,12 +157,62 @@ export class AuthService {
     this.seller.set(false);
   }
 
+  private withFreshAdminToken<T>(request: (token: string) => Observable<T>): Observable<T> {
+    const token = this.adminToken();
+    if (!token) {
+      return throwError(() => new Error('Admin authentication required.'));
+    }
+
+    return request(token).pipe(
+      catchError((error: unknown) => {
+        if (!this.shouldRefreshAdminToken(error)) {
+          return throwError(() => error);
+        }
+
+        return this.refreshAdminToken().pipe(
+          switchMap((response) => request(response.token)),
+        );
+      }),
+    );
+  }
+
+  private shouldRefreshAdminToken(error: unknown): boolean {
+    return error instanceof HttpErrorResponse && error.status === 401 && Boolean(this.adminSession()?.refreshToken);
+  }
+
+  private getAdminAuthHeaders(token: string): { Authorization: string } {
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  private createAdminProfileBody(profile: AdminProfileUpdate): Omit<AdminProfileUpdate, 'profileImage'> | FormData {
+    if (!profile.profileImage) {
+      const { profileImage: _profileImage, ...body } = profile;
+      return body;
+    }
+
+    const formData = new FormData();
+    formData.append('name', profile.name);
+    formData.append('phone', profile.phone ?? '');
+    formData.append('file', profile.profileImage);
+    return formData;
+  }
+
+  private setAdminSession(session: AdminSession): void {
+    sessionStorage.setItem(ADMIN_KEY, JSON.stringify(session));
+    this.adminSession.set(session);
+  }
+
+  private updateAdminTokens(token: string, refreshToken: string): void {
+    const current = this.adminSession();
+    if (!current) return;
+
+    this.setAdminSession({ ...current, token, refreshToken });
+  }
+
   private updateAdminUser(user: AdminUser): void {
     const current = this.adminSession();
     if (!current) return;
 
-    const next: AdminSession = { ...current, user };
-    sessionStorage.setItem(ADMIN_KEY, JSON.stringify(next));
-    this.adminSession.set(next);
+    this.setAdminSession({ ...current, user });
   }
 }

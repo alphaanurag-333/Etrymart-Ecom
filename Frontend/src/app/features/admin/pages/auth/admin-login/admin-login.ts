@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import Swal from 'sweetalert2';
 import { AuthService } from '../../../../../core/services/admin-service/auth.service';
 
 @Component({
@@ -51,10 +52,24 @@ export class AdminLoginPage {
       .subscribe({
         next: () => {
           const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/admin';
+          void Swal.fire({
+            icon: 'success',
+            title: 'Login successful',
+            text: 'Welcome back to the admin console.',
+            timer: 1200,
+            showConfirmButton: false,
+          });
           void this.router.navigateByUrl(returnUrl);
         },
         error: (error: unknown) => {
-          this.error.set(this.getLoginError(error));
+          const message = this.getLoginError(error);
+          this.error.set(message);
+          void Swal.fire({
+            icon: 'error',
+            title: 'Login failed',
+            text: message,
+            confirmButtonColor: '#f59e0b',
+          });
         },
       });
   }

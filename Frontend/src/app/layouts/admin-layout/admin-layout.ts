@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ADMIN_NAV } from '../../core/config/admin-nav.config';
+import { MEDIA_URL } from '../../core/config/api.config';
 import { AuthService } from '../../core/services/admin-service/auth.service';
 import { Breadcrumb } from '../../shared/components/breadcrumb/breadcrumb';
 import { SidebarMenu } from '../../shared/components/sidebar-menu/sidebar-menu';
@@ -27,6 +28,11 @@ export class AdminLayout {
   protected readonly adminInitial = computed(() => {
     const name = this.adminUser()?.name?.trim();
     return name ? name.charAt(0).toUpperCase() : 'A';
+  });
+  protected readonly adminProfileImageUrl = computed(() => {
+    const image = this.adminUser()?.profileImage;
+    if (!image) return null;
+    return image.startsWith('http') ? image : `${MEDIA_URL}${image}`;
   });
 
   constructor() {
