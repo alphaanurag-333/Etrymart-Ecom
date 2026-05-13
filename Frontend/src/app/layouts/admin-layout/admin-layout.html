@@ -1,0 +1,99 @@
+<div class="d-flex flex-row panel-shell">
+  <div
+    class="drawer-backdrop"
+    [class.drawer-backdrop--visible]="drawerOpen()"
+    aria-hidden="true"
+    (click)="toggleDrawer()"
+  ></div>
+
+  <aside
+    class="panel-sidebar text-bg-dark"
+    [class.panel-sidebar--open]="drawerOpen()"
+    [class.panel-sidebar--rail]="rail()"
+  >
+    <div class="panel-sidebar__brand">
+      <a routerLink="/admin" class="panel-brand">
+        <span class="panel-brand__mark"></span>
+        @if (!rail()) {
+          <span class="panel-brand__text">
+            <span class="panel-brand__title">EtryMart</span>
+            <span class="panel-brand__badge">Admin</span>
+          </span>
+        }
+      </a>
+      <button
+        type="button"
+        class="icon-btn panel-rail-toggle"
+        [attr.aria-pressed]="rail()"
+        aria-label="Toggle compact sidebar"
+        (click)="toggleRail()"
+      ></button>
+    </div>
+
+    <div class="panel-sidebar__scroll">
+      <app-sidebar-menu [items]="nav" [collapsed]="rail()" />
+    </div>
+
+    <div class="panel-sidebar__footer">
+      <button type="button" class="btn btn-outline-light w-100" (click)="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <div class="d-flex flex-column flex-grow-1 min-vh-100 min-w-0 panel-main">
+    <header
+      class="panel-topbar border-bottom bg-white d-flex align-items-center flex-wrap px-3 py-2 gap-2 shadow-sm"
+    >
+      <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+        <button
+          type="button"
+          class="icon-btn panel-hamburger"
+          aria-label="Toggle navigation"
+          (click)="toggleDrawer()"
+        ></button>
+        <div class="panel-topbar__titles">
+          <div class="text-muted small">Admin</div>
+          <app-breadcrumb />
+        </div>
+      </div>
+
+      <div class="panel-user">
+        <button
+          type="button"
+          class="avatar-btn"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="userOpen()"
+          (click)="toggleUser()"
+        >
+          <span class="avatar">{{ adminInitial() }}</span>
+        </button>
+        @if (userOpen()) {
+          <div class="dropdown" role="menu">
+            @if (adminUser(); as user) {
+              <div class="px-3 py-2 border-bottom mb-1">
+                <div class="fw-semibold">{{ user.name }}</div>
+                <div class="text-muted text-sm text-truncate">{{ user.email }}</div>
+              </div>
+            }
+            <a class="dropdown__item" routerLink="/admin/profile" (click)="userOpen.set(false)">
+              Profile
+            </a>
+            <a class="dropdown__item" routerLink="/admin/settings" (click)="userOpen.set(false)">
+              Settings
+            </a>
+            <button type="button" class="dropdown__item" (click)="logout()">Logout</button>
+          </div>
+        }
+      </div>
+    </header>
+
+    <section class="flex-grow-1 overflow-auto bg-light">
+      <div class="container-xl py-4">
+        <router-outlet />
+      </div>
+    </section>
+
+    <footer class="border-top bg-white py-3 text-center small text-muted panel-footer">
+      © {{ year }} EtryMart. All rights reserved.
+    </footer>
+  </div>
+</div>

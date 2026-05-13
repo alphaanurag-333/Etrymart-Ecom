@@ -1,0 +1,107 @@
+<main class="auth-screen admin-login-screen">
+  <section class="admin-login-card card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="row g-0">
+      <aside class="col-lg-5 admin-login-hero p-4 p-md-5 text-dark">
+        <a routerLink="/" class="admin-login-brand text-decoration-none text-dark">
+          <span class="panel-brand__mark"></span>
+          <span>
+            <strong>EtryMart</strong>
+            <small>Admin Console</small>
+          </span>
+        </a>
+
+        <div class="mt-auto">
+          <span class="badge rounded-pill text-bg-warning mb-3">Secure access</span>
+          <h1 class="heading-1 mb-3">Manage your marketplace with confidence.</h1>
+          <p class="mb-0 text-muted">
+            Sign in to review users, vendors, orders, bookings, and platform settings from one
+            dashboard.
+          </p>
+        </div>
+      </aside>
+
+      <div class="col-lg-7 p-4 p-md-5 bg-white">
+        <div class="mb-4">
+          <p class="text-muted text-sm uppercase tracking-wide fw-semibold mb-2">Welcome back</p>
+          <h2 class="heading-2">Admin sign in</h2>
+          <p class="text-muted mb-0 mt-2">Use your registered admin email and password.</p>
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-danger" role="alert">
+            {{ error() }}
+          </div>
+        }
+
+        <form class="form-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div>
+            <label class="form-label" for="a-email">Email address</label>
+            <input
+              id="a-email"
+              class="form-control form-control-lg"
+              [class.is-invalid]="email.invalid && (email.dirty || email.touched)"
+              type="email"
+              formControlName="email"
+              placeholder="admin@example.com"
+              autocomplete="username"
+            />
+            @if (email.invalid && (email.dirty || email.touched)) {
+              <div class="invalid-feedback">
+                Enter a valid admin email address.
+              </div>
+            }
+          </div>
+
+          <div>
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <label class="form-label" for="a-pass">Password</label>
+              <span class="text-muted text-sm">Protected admin access</span>
+            </div>
+            <div class="input-group input-group-lg">
+              <input
+                id="a-pass"
+                class="form-control"
+                [class.is-invalid]="password.invalid && (password.dirty || password.touched)"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Enter password"
+                autocomplete="current-password"
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                (click)="togglePassword()"
+                [attr.aria-pressed]="showPassword()"
+              >
+                {{ showPassword() ? 'Hide' : 'Show' }}
+              </button>
+              @if (password.invalid && (password.dirty || password.touched)) {
+                <div class="invalid-feedback">
+                  Password is required.
+                </div>
+              }
+            </div>
+          </div>
+
+          <button
+            class="btn btn-warning btn-lg fw-semibold w-100"
+            type="submit"
+            [disabled]="form.invalid || loading()"
+          >
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              Signing in...
+            } @else {
+              Sign in
+            }
+          </button>
+        </form>
+
+        <p class="text-center text-sm text-muted mt-4 mb-0">
+          Need to visit the storefront?
+          <a routerLink="/" class="link">Back to website</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</main>

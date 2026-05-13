@@ -1,0 +1,43 @@
+<ul class="side-nav" role="list">
+  @for (item of items(); track item.id) {
+    <li class="side-nav__item">
+      @if (item.children?.length) {
+        <button
+          type="button"
+          class="side-nav__row"
+          [class.side-nav__row--collapsed]="collapsed()"
+          (click)="toggle(item.id)"
+        [attr.aria-expanded]="isOpen(item.id)"
+        >
+          @if (item.icon) {
+            <span class="side-nav__icon" [attr.data-icon]="item.icon" aria-hidden="true"></span>
+          }
+          @if (!collapsed()) {
+            <span class="side-nav__label">{{ item.label }}</span>
+            <span class="side-nav__chev" [class.side-nav__chev--open]="isOpen(item.id)"></span>
+          }
+        </button>
+        @if (isOpen(item.id) && !collapsed()) {
+          <div class="side-nav__nest">
+            <app-sidebar-menu [items]="item.children!" [collapsed]="false" />
+          </div>
+        }
+      } @else if (item.path) {
+        <a
+          class="side-nav__row side-nav__link"
+          [class.side-nav__row--collapsed]="collapsed()"
+          [routerLink]="item.path"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+        >
+          @if (item.icon) {
+            <span class="side-nav__icon" [attr.data-icon]="item.icon" aria-hidden="true"></span>
+          }
+          @if (!collapsed()) {
+            <span class="side-nav__label">{{ item.label }}</span>
+          }
+        </a>
+      }
+    </li>
+  }
+</ul>

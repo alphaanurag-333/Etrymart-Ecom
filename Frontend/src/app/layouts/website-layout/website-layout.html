@@ -1,0 +1,56 @@
+<div class="web-shell">
+  <header class="border-bottom bg-white bg-opacity-90 shadow-sm sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light container py-2">
+      <a routerLink="/" class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark">
+        <span class="web-brand-mark" aria-hidden="true"></span>
+        EtryMart
+      </a>
+
+      <button
+        class="navbar-toggler"
+        type="button"
+        aria-controls="webNav"
+        [attr.aria-expanded]="mobileOpen()"
+        aria-label="Toggle navigation"
+        (click)="toggleMobile()"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div
+        class="collapse navbar-collapse"
+        id="webNav"
+        [class.show]="mobileOpen()"
+      >
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-2">
+          @for (item of nav; track item.id) {
+            <li class="nav-item">
+              <a
+                class="nav-link rounded px-lg-2"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+                (click)="closeMobile()"
+              >
+                {{ item.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <main class="web-main">
+    <div class="container web-breadcrumb-wrap">
+      <app-breadcrumb />
+    </div>
+    <router-outlet />
+  </main>
+
+  <footer class="web-footer">
+    <div class="container text-center text-muted small">
+      © {{ year }} EtryMart. All rights reserved.
+    </div>
+  </footer>
+</div>

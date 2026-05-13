@@ -1,0 +1,50 @@
+/* Public website — shell + navbar (flexbox only; Bootstrap navbar + rows in pages) */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.web-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.web-brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #f59e0b);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.web-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.web-breadcrumb-wrap {
+  padding-top: 0.75rem;
+}
+
+.web-breadcrumb-wrap:not(:has(nav)) {
+  display: none;
+}
+
+.web-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 1rem;
+  background: #fff;
+}
+
+.navbar-nav .nav-link.active {
+  color: var(--accent-ink) !important;
+  background: var(--accent);
+  border-radius: 10px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
