@@ -213,3 +213,125 @@
     flex-direction: column;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Attribute titles / values (product admin)                                 */
+/* -------------------------------------------------------------------------- */
+
+.btn-admin-primary {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  border: 0;
+  color: #f8fafc;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.35);
+  cursor: pointer;
+}
+
+.btn-admin-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  color: #fff;
+}
+
+.btn-admin-primary:disabled {
+  opacity: 0.65;
+}
+
+.btn-admin-outline {
+  border: 1px solid #bae6fd;
+  background: #fff;
+  color: #0369a1;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+}
+
+.btn-admin-outline:hover:not(:disabled) {
+  background: #f0f9ff;
+}
+
+.btn-icon-edit {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-icon-edit:hover {
+  background: #bae6fd;
+}
+
+.btn-icon-delete {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-icon-delete:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.btn-icon-delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-icon-edit mat-icon,
+.btn-icon-delete mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.table-head-admin {
+  background: #eff6ff !important;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.attr-switch.form-check-input:checked {
+  background-color: #0ea5e9;
+  border-color: #0ea5e9;
+}
+
+.attr-switch.form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.25);
+}
+
+.form-char-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.admin-table-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-form-icon-preview {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}

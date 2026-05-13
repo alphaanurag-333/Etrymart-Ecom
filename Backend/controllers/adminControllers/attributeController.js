@@ -1,5 +1,5 @@
-const AttributeTitle = require("../../models/other/attributeTitle");
-const AttributeValue = require("../../models/other/attributeValue");
+const AttributeTitle = require("../../models/product/attributeTitle");
+const AttributeValue = require("../../models/product/attributeValue");
 const AppError = require("../../utils/AppError");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { assertObjectId } = require("../../utils/assertObjectId");

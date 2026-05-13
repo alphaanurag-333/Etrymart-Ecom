@@ -33,21 +33,38 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'categories',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/product/category/category').then((m) => m.CategoryPage),
     title: 'Categories · Admin',
     data: { breadcrumb: 'Categories' },
   },
   {
     path: 'sub-categories',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/product/subCategory/subcategory').then((m) => m.SubcategoryPage),
     title: 'Subcategories · Admin',
     data: { breadcrumb: 'Subcategories' },
   },
   {
     path: 'attributes',
-    loadComponent: loadPlaceholder,
-    title: 'Attributes · Admin',
     data: { breadcrumb: 'Attributes' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'titles' },
+      {
+        path: 'titles',
+        loadComponent: () =>
+          import('./pages/product/attribute-title/attribute-title').then((m) => m.AttributeTitlePage),
+        title: 'Attribute titles · Admin',
+        data: { breadcrumb: 'Attribute titles' },
+      },
+      {
+        path: 'values',
+        loadComponent: () =>
+          import('./pages/product/attribute-value/attribute-value').then((m) => m.AttributeValuePage),
+        title: 'Attribute values · Admin',
+        data: { breadcrumb: 'Attribute values' },
+      },
+    ],
   },
   {
     path: 'products',
