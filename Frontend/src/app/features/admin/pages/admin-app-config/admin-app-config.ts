@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { Store } from '@ngrx/store';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { catchError, finalize, of, throwError } from 'rxjs';
@@ -11,6 +12,7 @@ import {
   AppPaymentMethodType,
 } from '../../../../core/services/admin-service/app-config.service';
 import { MEDIA_URL } from '../../../../core/config/api.config';
+import { AppConfigActions } from '../../../../store/app-config/app-config.actions';
 
 export type AppConfigTabId = 'app' | 'media' | 'location' | 'social' | 'payment';
 
@@ -23,6 +25,7 @@ export type AppConfigTabId = 'app' | 'media' | 'location' | 'social' | 'payment'
 export class AdminAppConfigPage implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly appConfig = inject(AppConfigService);
+  private readonly store = inject(Store);
   private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly loading = signal(false);
@@ -208,6 +211,7 @@ export class AdminAppConfigPage implements OnDestroy {
           this.hasExistingConfig.set(true);
           this.clearPendingUploads();
           this.applyConfig(res.data);
+          this.store.dispatch(AppConfigActions.patchFromSettings({ config: res.data }));
           void Swal.fire({ icon: 'success', title: 'Saved', timer: 1600, showConfirmButton: false });
         },
         error: (err: HttpErrorResponse) =>

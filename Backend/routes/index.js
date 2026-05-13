@@ -12,6 +12,7 @@ const adminStaticPageRoutes = require("./adminRoutes/staticPageRoutes");
 const adminSubcategoryRoutes = require("./adminRoutes/subcategoryRoutes");
 const adminTryOnBannerRoutes = require("./adminRoutes/tryOnBannerRoutes");
 const healthRoutes = require("./health.routes");
+const publicRoutes = require("./publicRoutes");
 const userMiscRoutes = require("./userRoutes/miscRoutes");
 
 
@@ -29,6 +30,7 @@ router.use("/admin/pages", adminStaticPageRoutes);
 router.use("/admin/subcategories", adminSubcategoryRoutes);
 router.use("/admin/try-on-banners", adminTryOnBannerRoutes);
 router.use("/user/misc", userMiscRoutes);
+router.use("/public", publicRoutes);
 router.use("/health", healthRoutes);
 
 module.exports = router;

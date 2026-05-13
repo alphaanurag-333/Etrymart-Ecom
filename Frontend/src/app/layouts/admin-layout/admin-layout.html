@@ -13,11 +13,15 @@
     aria-label="Admin navigation"
   >
     <div class="panel-sidebar__brand">
-      <a routerLink="/admin/dashboard" class="panel-brand" title="Admin home">
-        <span class="panel-brand__mark" aria-hidden="true"></span>
+      <a routerLink="/admin/dashboard" class="panel-brand" [title]="brandTitle() + ' — Admin home'">
+        @if (brandLogoUrl(); as logoSrc) {
+          <img class="panel-brand__logo" [src]="logoSrc" [alt]="brandTitle()" />
+        } @else {
+          <span class="panel-brand__mark" aria-hidden="true"></span>
+        }
         @if (!rail()) {
           <span class="panel-brand__text">
-            <span class="panel-brand__title">EtryMart</span>
+            <span class="panel-brand__title">{{ brandTitle() }}</span>
             <span class="panel-brand__meta">
               <span class="panel-brand__badge">Admin</span>
               <span class="panel-brand__hint">Control panel</span>
@@ -123,7 +127,7 @@
     </section>
 
     <footer class="border-top bg-white py-3 text-center small text-muted panel-footer">
-      © {{ year }} EtryMart. All rights reserved.
+      {{ footerLine() }}
     </footer>
   </div>
 </div>
