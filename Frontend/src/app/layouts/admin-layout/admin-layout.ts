@@ -2,7 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { ADMIN_NAV } from '../../core/config/admin-nav.config';
+import { ADMIN_NAV_GROUPS } from '../../core/config/admin-nav.config';
 import { MEDIA_URL } from '../../core/config/api.config';
 import { AuthService } from '../../core/services/admin-service/auth.service';
 import { Breadcrumb } from '../../shared/components/breadcrumb/breadcrumb';
@@ -19,7 +19,7 @@ export class AdminLayout {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly nav = ADMIN_NAV;
+  protected readonly navGroups = ADMIN_NAV_GROUPS;
   protected readonly year = new Date().getFullYear();
   protected readonly drawerOpen = signal(false);
   protected readonly userOpen = signal(false);

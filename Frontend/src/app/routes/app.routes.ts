@@ -6,6 +6,12 @@ import { sellerLoginGuard } from '../core/guards/seller-login.guard';
 
 export const routes: Routes = [
   {
+    path: 'not-found',
+    loadComponent: () =>
+      import('../features/errors/not-found/not-found').then((m) => m.NotFoundPage),
+    title: 'Page not found · EtryMart',
+  },
+  {
     path: '',
     loadComponent: () =>
       import('../layouts/website-layout/website-layout').then((m) => m.WebsiteLayout),
@@ -51,5 +57,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: '/not-found' },
 ];

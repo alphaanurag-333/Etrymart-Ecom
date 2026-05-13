@@ -7,7 +7,7 @@
   ></div>
 
   <aside
-    class="panel-sidebar text-bg-dark"
+    class="panel-sidebar"
     [class.panel-sidebar--open]="drawerOpen()"
     [class.panel-sidebar--rail]="rail()"
   >
@@ -23,9 +23,9 @@
       </a>
       <button
         type="button"
-        class="icon-btn panel-rail-toggle"
+        class="panel-sidebar-hamburger"
         [attr.aria-pressed]="rail()"
-        aria-label="Toggle compact sidebar"
+        aria-label="Toggle sidebar width"
         (click)="toggleRail()"
       ></button>
     </div>
@@ -46,8 +46,8 @@
       <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
         <button
           type="button"
-          class="icon-btn panel-hamburger"
-          aria-label="Toggle navigation"
+          class="panel-hamburger"
+          aria-label="Open navigation menu"
           (click)="toggleDrawer()"
         ></button>
         <div class="panel-topbar__titles">
@@ -80,7 +80,7 @@
       </div>
     </header>
 
-    <section class="flex-grow-1 overflow-auto bg-light">
+    <section class="panel-main__body flex-grow-1 overflow-auto bg-light">
       <div class="container-xl py-4">
         <router-outlet />
       </div>

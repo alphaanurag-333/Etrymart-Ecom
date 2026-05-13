@@ -18,4 +18,5 @@ export const WEBSITE_ROUTES: Routes = [
     title: 'Contact · EtryMart',
     data: { breadcrumb: 'Contact' },
   },
+  // { path: '**', redirectTo: '/not-found' },
 ];

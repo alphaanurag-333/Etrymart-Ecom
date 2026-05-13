@@ -1,4 +1,4 @@
-<div class="d-flex flex-row panel-shell">
+<div class="d-flex flex-row panel-shell panel-shell--admin">
   <div
     class="drawer-backdrop"
     [class.drawer-backdrop--visible]="drawerOpen()"
@@ -7,47 +7,71 @@
   ></div>
 
   <aside
-    class="panel-sidebar text-bg-dark"
+    class="panel-sidebar"
     [class.panel-sidebar--open]="drawerOpen()"
     [class.panel-sidebar--rail]="rail()"
+    aria-label="Admin navigation"
   >
     <div class="panel-sidebar__brand">
-      <a routerLink="/admin" class="panel-brand">
-        <span class="panel-brand__mark"></span>
+      <a routerLink="/admin/dashboard" class="panel-brand" title="Admin home">
+        <span class="panel-brand__mark" aria-hidden="true"></span>
         @if (!rail()) {
           <span class="panel-brand__text">
             <span class="panel-brand__title">EtryMart</span>
-            <span class="panel-brand__badge">Admin</span>
+            <span class="panel-brand__meta">
+              <span class="panel-brand__badge">Admin</span>
+              <span class="panel-brand__hint">Control panel</span>
+            </span>
           </span>
         }
       </a>
       <button
         type="button"
-        class="icon-btn panel-rail-toggle"
+        class="panel-sidebar-hamburger"
         [attr.aria-pressed]="rail()"
-        aria-label="Toggle compact sidebar"
+        aria-label="Toggle sidebar width"
         (click)="toggleRail()"
       ></button>
     </div>
 
-    <div class="panel-sidebar__scroll">
-      <app-sidebar-menu [items]="nav" [collapsed]="rail()" />
-    </div>
+    <nav class="panel-sidebar__scroll" aria-label="Primary">
+      @for (group of navGroups; track group.title) {
+        <section class="panel-nav-section">
+          @if (!rail()) {
+            <h2 class="panel-nav-section__title">{{ group.title }}</h2>
+          }
+          <app-sidebar-menu [items]="group.items" [collapsed]="rail()" />
+        </section>
+      }
+    </nav>
 
     <div class="panel-sidebar__footer">
-      <button type="button" class="btn btn-outline-light w-100" (click)="logout()">Logout</button>
+      <a routerLink="/" class="panel-sidebar__storefront" title="Open storefront in same tab">
+        <span class="panel-sidebar__storefront-icon" aria-hidden="true"></span>
+        @if (!rail()) {
+          <span>View storefront</span>
+        }
+      </a>
+      <button type="button" class="btn panel-sidebar__logout" (click)="logout()">
+        @if (!rail()) {
+          <span>Log out</span>
+        } @else {
+          <span class="panel-sidebar__logout-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Log out</span>
+        }
+      </button>
     </div>
   </aside>
 
-  <div class="d-flex flex-column flex-grow-1 min-vh-100 min-w-0 panel-main">
+  <div class="d-flex flex-column flex-grow-1 min-w-0 panel-main">
     <header
       class="panel-topbar border-bottom bg-white d-flex align-items-center flex-wrap px-3 py-2 gap-2 shadow-sm"
     >
       <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
         <button
           type="button"
-          class="icon-btn panel-hamburger"
-          aria-label="Toggle navigation"
+          class="panel-hamburger"
+          aria-label="Open navigation menu"
           (click)="toggleDrawer()"
         ></button>
         <div class="panel-topbar__titles">
@@ -92,7 +116,7 @@
       </div>
     </header>
 
-    <section class="flex-grow-1 overflow-auto bg-light">
+    <section class="panel-main__body flex-grow-1 overflow-auto">
       <div class="container-xl py-4">
         <router-outlet />
       </div>

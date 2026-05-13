@@ -118,7 +118,7 @@ export class AuthService {
   updateAdminProfile(profile: AdminProfileUpdate): Observable<{ message: string; user: AdminUser }> {
     const body = this.createAdminProfileBody(profile);
 
-    return this.withFreshAdminToken((token) =>
+    return this.authorizedAdminRequest((token) =>
       this.http.patch<{ message: string; user: AdminUser }>(`${API_URL}/admin/auth/me`, body, {
         headers: this.getAdminAuthHeaders(token),
       }),
@@ -131,7 +131,7 @@ export class AuthService {
   }
 
   changeAdminPassword(passwords: AdminPasswordUpdate): Observable<{ message: string }> {
-    return this.withFreshAdminToken((token) =>
+    return this.authorizedAdminRequest((token) =>
       this.http.patch<{ message: string }>(
         `${API_URL}/admin/auth/me/password`,
         passwords,
@@ -157,7 +157,7 @@ export class AuthService {
     this.seller.set(false);
   }
 
-  private withFreshAdminToken<T>(request: (token: string) => Observable<T>): Observable<T> {
+  authorizedAdminRequest<T>(request: (token: string) => Observable<T>): Observable<T> {
     const token = this.adminToken();
     if (!token) {
       return throwError(() => new Error('Admin authentication required.'));

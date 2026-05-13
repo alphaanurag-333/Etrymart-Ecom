@@ -36,4 +36,11 @@ export const SELLER_ROUTES: Routes = [
     title: 'Settings · Seller',
     data: { breadcrumb: 'Settings' },
   },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('../errors/not-found/not-found').then((m) => m.NotFoundPage),
+    title: 'Page not found · Seller',
+    data: { breadcrumb: 'Page not found' },
+  },
 ];
