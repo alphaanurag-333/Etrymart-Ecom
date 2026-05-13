@@ -29,7 +29,7 @@
 }
 
 .app-config-tabs__btn--active {
-  color: #f97316;
+  color:var(--accent);
 }
 
 .app-config-tabs__btn--active::after {
@@ -40,7 +40,7 @@
   bottom: 0;
   height: 3px;
   border-radius: 3px 3px 0 0;
-  background: #f97316;
+  background: var(--accent);
 }
 
 .app-config-body {

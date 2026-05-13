@@ -9,42 +9,28 @@
   <aside
     class="panel-sidebar"
     [class.panel-sidebar--open]="drawerOpen()"
-    [class.panel-sidebar--rail]="rail()"
+    [class.panel-sidebar--desktop-collapsed]="sidebarCollapsed()"
     aria-label="Admin navigation"
   >
     <div class="panel-sidebar__brand">
-      <a routerLink="/admin/dashboard" class="panel-brand" [title]="brandTitle() + ' — Admin home'">
+      <a
+        routerLink="/admin/dashboard"
+        class="panel-brand panel-brand--logo-only"
+        [title]="brandTitle() + ' — Admin home'"
+      >
         @if (brandLogoUrl(); as logoSrc) {
           <img class="panel-brand__logo" [src]="logoSrc" [alt]="brandTitle()" />
         } @else {
           <span class="panel-brand__mark" aria-hidden="true"></span>
         }
-        @if (!rail()) {
-          <span class="panel-brand__text">
-            <span class="panel-brand__title">{{ brandTitle() }}</span>
-            <span class="panel-brand__meta">
-              <span class="panel-brand__badge">Admin</span>
-              <span class="panel-brand__hint">Control panel</span>
-            </span>
-          </span>
-        }
       </a>
-      <button
-        type="button"
-        class="panel-sidebar-hamburger"
-        [attr.aria-pressed]="rail()"
-        aria-label="Toggle sidebar width"
-        (click)="toggleRail()"
-      ></button>
     </div>
 
     <nav class="panel-sidebar__scroll" aria-label="Primary">
       @for (group of navGroups; track group.title) {
         <section class="panel-nav-section">
-          @if (!rail()) {
-            <h2 class="panel-nav-section__title">{{ group.title }}</h2>
-          }
-          <app-sidebar-menu [items]="group.items" [collapsed]="rail()" />
+          <h2 class="panel-nav-section__title">{{ group.title }}</h2>
+          <app-sidebar-menu [items]="group.items" />
         </section>
       }
     </nav>
@@ -52,17 +38,10 @@
     <div class="panel-sidebar__footer">
       <a routerLink="/" class="panel-sidebar__storefront" title="Open storefront in same tab">
         <span class="panel-sidebar__storefront-icon" aria-hidden="true"></span>
-        @if (!rail()) {
-          <span>View storefront</span>
-        }
+        <span>View storefront</span>
       </a>
       <button type="button" class="btn panel-sidebar__logout" (click)="logout()">
-        @if (!rail()) {
-          <span>Log out</span>
-        } @else {
-          <span class="panel-sidebar__logout-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Log out</span>
-        }
+        <span>Log out</span>
       </button>
     </div>
   </aside>
@@ -75,7 +54,8 @@
         <button
           type="button"
           class="panel-hamburger"
-          aria-label="Open navigation menu"
+          aria-label="Toggle navigation menu"
+          [attr.aria-expanded]="navPanelExpanded()"
           (click)="toggleDrawer()"
         ></button>
         <div class="panel-topbar__titles">
@@ -84,13 +64,13 @@
         </div>
       </div>
 
-      <div class="panel-user">
+      <div class="panel-user" #userMenuRoot>
         <button
           type="button"
           class="avatar-btn"
           aria-haspopup="menu"
           [attr.aria-expanded]="userOpen()"
-          (click)="toggleUser()"
+          (click)="toggleUser($event)"
         >
           <span class="avatar">
             @if (adminProfileImageUrl(); as imageUrl) {
@@ -111,8 +91,8 @@
             <a class="dropdown__item" routerLink="/admin/profile" (click)="userOpen.set(false)">
               Profile
             </a>
-            <a class="dropdown__item" routerLink="/admin/settings" (click)="userOpen.set(false)">
-              Settings
+            <a class="dropdown__item" routerLink="/admin/app-config" (click)="userOpen.set(false)">
+              Application settings
             </a>
             <button type="button" class="dropdown__item" (click)="logout()">Logout</button>
           </div>

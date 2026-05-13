@@ -86,18 +86,17 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         path: '/admin/withdrawal-request',
         icon: 'banknote',
       },
-      {
-        id: 'bussiness-categories',
-        label: 'Business categories',
-        path: '/admin/bussiness-categories',
-        icon: 'layers',
-      },
+      // {
+      //   id: 'bussiness-categories',
+      //   label: 'Business categories',
+      //   path: '/admin/bussiness-categories',
+      //   icon: 'layers',
+      // },
     ],
   },
   {
     title: 'System settings',
     items: [
-      { id: 'business-setup', label: 'Business setup', path: '/admin/business-setup', icon: 'briefcase' },
       { id: 'static-pages', label: 'Static pages', path: '/admin/static-pages', icon: 'file-text' },
       {
         id: 'app-config',
