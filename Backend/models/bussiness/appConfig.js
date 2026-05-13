@@ -36,25 +36,11 @@ const paymentMethodSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const DocumentSchema = new mongoose.Schema(
-  {
-    type: {
-      type: String,
-      enum: ["Aadhar Card", "Pan Card", "Bank Details"],
-      required: true,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  { _id: false }
-);
 const commissionSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["Vendor", "VenueVendor"],
+      enum: ["Vendor"],
       required: true,
     },
     percentage: {
@@ -148,15 +134,6 @@ const appConfigSchema = new mongoose.Schema(
         { type: "online", isActive: true },
       ],
     },
-    documents: {
-      type: [DocumentSchema],
-      default: () => [
-        { type: "Aadhar Card", isActive: true },
-        { type: "Pan Card", isActive: true },
-        { type: "Bank Details", isActive: true },
-      ],
-
-    },
 
     payment_gateways: {
       type: [paymentGatewaySchema],
@@ -166,7 +143,6 @@ const appConfigSchema = new mongoose.Schema(
       type: [commissionSchema],
       default: () => [
         { type: "Vendor", percentage: 0 },
-        { type: "VenueVendor", percentage: 0 },
       ],
     },
   },

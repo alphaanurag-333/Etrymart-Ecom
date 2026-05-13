@@ -1,0 +1,102 @@
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div class="page-header__lead">
+    <h1 class="heading-2">Product</h1>
+    <p class="text-muted text-sm page-header__sub">Read-only product details.</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a routerLink="/admin/products/list" class="btn-admin-outline">Back to list</a>
+    @if (product(); as p) {
+      <a [routerLink]="['/admin/products', p._id, 'edit']" class="btn-admin-primary">Edit</a>
+    }
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="text-muted">Loading…</p>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (product(); as p) {
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body p-3">
+      <div class="row g-3">
+        <div class="col-12 col-md-3 text-center">
+          @if (mediaSrc(p.thumbnail); as thumb) {
+            <img [src]="thumb" class="img-fluid rounded border" alt="" style="max-height: 220px; object-fit: contain" />
+          }
+        </div>
+        <div class="col-12 col-md-9">
+          <h2 class="h4 fw-bold mb-2">{{ p.name }}</h2>
+          <p class="text-muted small mb-2">SKU {{ p.sku }} · Slug {{ p.slug }}</p>
+          <p class="mb-2"><span class="badge text-bg-secondary">{{ p.variantType }}</span> · {{ formatDiscount(p) }} tax ({{ p.taxType }}) {{ p.taxValue }}</p>
+          <p class="mb-0"><strong>Price:</strong> {{ formatMoney(p.price) }} · <strong>Stock:</strong> {{ p.stock }} · <strong>MOQ:</strong> {{ p.moq }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body p-3">
+      <h3 class="h6 fw-bold mb-2">Classification</h3>
+      <p class="mb-1"><strong>Category:</strong> {{ categoryName(p) }}</p>
+      <p class="mb-1"><strong>Subcategory:</strong> {{ subCategoryName(p) }}</p>
+      <p class="mb-1"><strong>Status:</strong> {{ p.status }}</p>
+      <p class="mb-0"><strong>Admin approved:</strong> {{ p.adminApproved ? 'Yes' : 'No' }}</p>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body p-3">
+      <h3 class="h6 fw-bold mb-2">Description</h3>
+      <p class="mb-2 whitespace-pre-wrap">{{ p.description }}</p>
+      @if (p.shortDescription) {
+        <h4 class="small fw-bold text-muted">Short description</h4>
+        <p class="mb-0 small">{{ p.shortDescription }}</p>
+      }
+    </div>
+  </div>
+
+  @if (p.images.length) {
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body p-3">
+        <h3 class="h6 fw-bold mb-3">Gallery</h3>
+        <div class="d-flex flex-wrap gap-2">
+          @for (img of p.images; track img) {
+            @if (mediaSrc(img); as src) {
+              <img [src]="src" alt="" class="img-thumbnail" style="width: 96px; height: 96px; object-fit: cover" />
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (p.variantType === 'multi' && p.combinations.length) {
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-3">
+        <h3 class="h6 fw-bold mb-3">Variants ({{ p.combinations.length }})</h3>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of p.combinations; track c.sku) {
+                <tr>
+                  <td>{{ c.sku }}</td>
+                  <td>{{ formatMoney(c.price) }}</td>
+                  <td>{{ c.stock }}</td>
+                  <td>{{ c.status }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+}

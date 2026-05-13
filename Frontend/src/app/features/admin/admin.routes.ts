@@ -68,9 +68,38 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'products',
-    loadComponent: loadPlaceholder,
-    title: 'Products · Admin',
     data: { breadcrumb: 'Products' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'list' },
+      {
+        path: 'list',
+        loadComponent: () =>
+          import('./pages/product/product-list/product-list').then((m) => m.ProductListPage),
+        title: 'Products · Admin',
+        data: { breadcrumb: 'Products' },
+      },
+      {
+        path: 'new',
+        loadComponent: () =>
+          import('./pages/product/product-create/product-create').then((m) => m.ProductCreatePage),
+        title: 'Add product · Admin',
+        data: { breadcrumb: 'Add product' },
+      },
+      {
+        path: ':id/edit',
+        loadComponent: () =>
+          import('./pages/product/product-edit/product-edit').then((m) => m.ProductEditPage),
+        title: 'Edit product · Admin',
+        data: { breadcrumb: 'Edit product' },
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import('./pages/product/product-view/product-view').then((m) => m.ProductViewPage),
+        title: 'Product · Admin',
+        data: { breadcrumb: 'Product' },
+      },
+    ],
   },
   {
     path: 'seller-products',
@@ -80,25 +109,29 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'banners',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/admin-banner/admin-banner').then((m) => m.AdminBannerPage),
     title: 'Banners · Admin',
     data: { breadcrumb: 'Banners' },
   },
   {
     path: 'tryon-banner',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/admin-tryonBanner/admin-tryonBanner').then((m) => m.AdminTryonBannerPage),
     title: 'Try-on banners · Admin',
     data: { breadcrumb: 'Try-on banners' },
   },
   {
     path: 'push-notifications',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/admin-notification/admin-notification').then((m) => m.AdminNotificationPage),
     title: 'Push notifications · Admin',
     data: { breadcrumb: 'Push notifications' },
   },
   {
     path: 'coupons',
-    loadComponent: loadPlaceholder,
+    loadComponent: () =>
+      import('./pages/admin-coupons/admin-coupons').then((m) => m.AdminCouponsPage),
     title: 'Coupons · Admin',
     data: { breadcrumb: 'Coupons' },
   },

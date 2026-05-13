@@ -37,7 +37,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { id: 'sub-categories', label: 'Subcategories', path: '/admin/sub-categories', icon: 'folder-tree' },
       { id: 'attribute-titles', label: 'Attribute titles', path: '/admin/attributes/titles', icon: 'sliders' },
       { id: 'attribute-values', label: 'Attribute values', path: '/admin/attributes/values', icon: 'list' },
-      { id: 'products', label: 'Products', path: '/admin/products', icon: 'package' },
+      { id: 'products', label: 'Products', path: '/admin/products/list', icon: 'package' },
       { id: 'seller-products', label: 'Seller products', path: '/admin/seller-products', icon: 'store' },
     ],
   },
