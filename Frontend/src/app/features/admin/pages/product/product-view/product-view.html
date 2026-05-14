@@ -22,13 +22,22 @@
         <div class="col-12 col-md-3 text-center">
           @if (mediaSrc(p.thumbnail); as thumb) {
             <img [src]="thumb" class="img-fluid rounded border" alt="" style="max-height: 220px; object-fit: contain" />
+          } @else {
+            <p class="text-muted small mb-0">No thumbnail</p>
           }
         </div>
         <div class="col-12 col-md-9">
           <h2 class="h4 fw-bold mb-2">{{ p.name }}</h2>
-          <p class="text-muted small mb-2">SKU {{ p.sku }} · Slug {{ p.slug }}</p>
-          <p class="mb-2"><span class="badge text-bg-secondary">{{ p.variantType }}</span> · {{ formatDiscount(p) }} tax ({{ p.taxType }}) {{ p.taxValue }}</p>
-          <p class="mb-0"><strong>Price:</strong> {{ formatMoney(p.price) }} · <strong>Stock:</strong> {{ p.stock }} · <strong>MOQ:</strong> {{ p.moq }}</p>
+          <p class="text-muted small mb-2">SKU <code class="small">{{ p.sku }}</code> · Slug <code class="small">{{ p.slug }}</code></p>
+          <p class="mb-2">
+            <span class="badge text-bg-secondary text-uppercase">{{ p.variantType }}</span>
+            @if (p.variantType === 'multi') {
+              <span class="text-muted small ms-1">({{ p.combinations.length }} combination(s))</span>
+            }
+          </p>
+          <p class="mb-1"><strong>Base price:</strong> {{ formatMoney(p.price) }} · <strong>Stock:</strong> {{ p.stock }} · <strong>MOQ:</strong> {{ p.moq }}</p>
+          <p class="mb-1"><strong>Discount:</strong> {{ formatDiscount(p) }} <span class="text-muted">({{ p.discountType }})</span></p>
+          <p class="mb-0"><strong>Tax:</strong> {{ p.taxType }} · <strong>Tax value:</strong> {{ p.taxValue }}</p>
         </div>
       </div>
     </div>
@@ -36,11 +45,22 @@
 
   <div class="card shadow-sm border-0 mb-3">
     <div class="card-body p-3">
-      <h3 class="h6 fw-bold mb-2">Classification</h3>
-      <p class="mb-1"><strong>Category:</strong> {{ categoryName(p) }}</p>
-      <p class="mb-1"><strong>Subcategory:</strong> {{ subCategoryName(p) }}</p>
-      <p class="mb-1"><strong>Status:</strong> {{ p.status }}</p>
-      <p class="mb-0"><strong>Admin approved:</strong> {{ p.adminApproved ? 'Yes' : 'No' }}</p>
+      <h3 class="h6 fw-bold mb-2">Classification &amp; ownership</h3>
+      <div class="row g-2 small">
+        <div class="col-12 col-sm-6">
+          <p class="mb-1"><strong>Category:</strong> {{ categoryName(p) }}</p>
+          <p class="mb-1"><strong>Subcategory:</strong> {{ subCategoryName(p) }}</p>
+        </div>
+        <div class="col-12 col-sm-6">
+          <p class="mb-1"><strong>Status:</strong> <span class="badge text-bg-light border">{{ p.status }}</span></p>
+          <p class="mb-1"><strong>Role:</strong> {{ p.role }}</p>
+          <p class="mb-1"><strong>Added by:</strong> {{ addedByLabel(p) }}</p>
+          <p class="mb-0"><strong>Admin approved:</strong> {{ p.adminApproved ? 'Yes' : 'No' }}</p>
+        </div>
+      </div>
+      @if (p.variantType === 'multi') {
+        <p class="mb-0 mt-2 small text-muted"><strong>Variant dimensions:</strong> {{ attributeTitlesSummary(p) }}</p>
+      }
     </div>
   </div>
 
@@ -49,7 +69,7 @@
       <h3 class="h6 fw-bold mb-2">Description</h3>
       <p class="mb-2 whitespace-pre-wrap">{{ p.description }}</p>
       @if (p.shortDescription) {
-        <h4 class="small fw-bold text-muted">Short description</h4>
+        <h4 class="small fw-bold text-muted mb-1">Short description</h4>
         <p class="mb-0 small">{{ p.shortDescription }}</p>
       }
     </div>
@@ -62,7 +82,9 @@
         <div class="d-flex flex-wrap gap-2">
           @for (img of p.images; track img) {
             @if (mediaSrc(img); as src) {
-              <img [src]="src" alt="" class="img-thumbnail" style="width: 96px; height: 96px; object-fit: cover" />
+              <a [href]="src" target="_blank" rel="noopener noreferrer">
+                <img [src]="src" alt="" class="img-thumbnail" style="width: 96px; height: 96px; object-fit: cover" />
+              </a>
             }
           }
         </div>
@@ -71,26 +93,50 @@
   }
 
   @if (p.variantType === 'multi' && p.combinations.length) {
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 mb-3">
       <div class="card-body p-3">
-        <h3 class="h6 fw-bold mb-3">Variants ({{ p.combinations.length }})</h3>
+        <h3 class="h6 fw-bold mb-3">Variant combinations</h3>
         <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
+          <table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light">
               <tr>
                 <th>SKU</th>
+                @for (col of variantColumnTitles(p); track $index) {
+                  <th>{{ col }}</th>
+                }
                 <th>Price</th>
+                <th>Discount</th>
                 <th>Stock</th>
                 <th>Status</th>
+                <th>Images</th>
               </tr>
             </thead>
             <tbody>
               @for (c of p.combinations; track c.sku) {
                 <tr>
-                  <td>{{ c.sku }}</td>
+                  <td class="text-nowrap"><code class="small">{{ c.sku }}</code></td>
+                  @for (attr of c.attributes; track $index) {
+                    <td class="small">{{ attrValueLabel(attr) }}</td>
+                  }
                   <td>{{ formatMoney(c.price) }}</td>
+                  <td>{{ formatCombinationDiscount(p, c) }}</td>
                   <td>{{ c.stock }}</td>
-                  <td>{{ c.status }}</td>
+                  <td><span class="badge text-bg-light border">{{ c.status }}</span></td>
+                  <td style="min-width: 8rem">
+                    @if (combinationImages(c).length) {
+                      <div class="d-flex flex-wrap gap-1">
+                        @for (img of combinationImages(c); track img) {
+                          @if (mediaSrc(img); as src) {
+                            <a [href]="src" target="_blank" rel="noopener noreferrer" class="d-inline-block">
+                              <img [src]="src" alt="" class="rounded border" style="width: 48px; height: 48px; object-fit: cover" />
+                            </a>
+                          }
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-muted small">—</span>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>
@@ -99,4 +145,11 @@
       </div>
     </div>
   }
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-3">
+      <h3 class="h6 fw-bold mb-2">Record</h3>
+      <p class="mb-0 small text-muted">Created {{ formatDate(p.createdAt) }} · Updated {{ formatDate(p.updatedAt) }}</p>
+    </div>
+  </div>
 }

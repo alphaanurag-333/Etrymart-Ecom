@@ -1,0 +1,163 @@
+<div class="etry-login" aria-labelledby="etry-login-title">
+  <div class="etry-login__pattern" aria-hidden="true"></div>
+
+  <div class="etry-login__shell">
+    <div class="etry-login__left">
+      <a routerLink="/" class="etry-login__brand" [attr.title]="brandTitle() + ' — Home'">
+        <span class="etry-login__brand-icon" aria-hidden="true"></span>
+        <span class="etry-login__brand-text">{{ brandTitle() }}</span>
+      </a>
+
+      <div class="etry-login__card">
+        <h1 id="etry-login-title" class="etry-login__welcome">Welcome Back!</h1>
+        <p class="etry-login__subtitle">…a Place to try digitally, Decide Instantly</p>
+
+        @if (error()) {
+          <div class="etry-login__alert" role="alert">{{ error() }}</div>
+        }
+
+        @if (step() === 1) {
+          <div class="etry-login__field">
+            <label class="etry-login__label" for="etry-mobile">Mobile Number</label>
+            <input
+              id="etry-mobile"
+              class="etry-login__input"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="tel"
+              placeholder="Enter mobile number"
+              [formControl]="form.controls.mobile"
+              (keyup.enter)="sendOtp()"
+            />
+          </div>
+
+          <label class="etry-login__check">
+            <input type="checkbox" [formControl]="form.controls.agreeTerms" />
+            <span>
+              I agree to the
+              <a routerLink="/about" class="etry-login__inline-link">Terms &amp; Conditions</a>
+              and
+              <a routerLink="/about" class="etry-login__inline-link">Privacy Policy</a>.
+            </span>
+          </label>
+          @if (form.controls.agreeTerms.invalid && form.controls.agreeTerms.touched) {
+            <p class="etry-login__hint etry-login__hint--error">Please accept to continue.</p>
+          }
+
+          <button type="button" class="etry-login__btn etry-login__btn--primary" [disabled]="loading()" (click)="sendOtp()">
+            @if (loading()) {
+              Sending…
+            } @else {
+              Send OTP
+            }
+          </button>
+        } @else {
+          <div class="etry-login__field">
+            <label class="etry-login__label" for="etry-mobile-ro">Mobile Number</label>
+            <div class="etry-login__input-row">
+              <input
+                id="etry-mobile-ro"
+                class="etry-login__input etry-login__input--grow"
+                type="tel"
+                readonly
+                [value]="form.controls.mobile.value"
+              />
+              <button type="button" class="etry-login__icon-btn" (click)="backToMobile()" title="Edit mobile" aria-label="Edit mobile number">
+                <span class="etry-login__icon-pen" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="etry-login__field">
+            <label class="etry-login__label" for="etry-otp">Enter OTP</label>
+            <div class="etry-login__input-row">
+              <input
+                id="etry-otp"
+                class="etry-login__input etry-login__input--grow"
+                [type]="showOtpPlain() ? 'text' : 'password'"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+                placeholder="••••••"
+                [formControl]="form.controls.otp"
+                (keyup.enter)="verifyOtp()"
+              />
+              <button
+                type="button"
+                class="etry-login__icon-btn"
+                (click)="toggleOtpVisibility()"
+                [attr.aria-pressed]="showOtpPlain()"
+                [attr.title]="showOtpPlain() ? 'Hide OTP' : 'Show OTP'"
+                [attr.aria-label]="showOtpPlain() ? 'Hide OTP' : 'Show OTP'"
+              >
+                <span
+                  class="etry-login__icon-eye"
+                  [class.etry-login__icon-eye--slash]="!showOtpPlain()"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+          </div>
+
+          @if (isDev && lastDevOtp(); as d) {
+            <p class="etry-login__dev">Development OTP: <code>{{ d }}</code></p>
+          }
+
+          <div class="etry-login__otp-actions">
+            <button type="button" class="etry-login__btn etry-login__btn--primary" [disabled]="loading()" (click)="verifyOtp()">
+              @if (loading()) {
+                Verifying…
+              } @else {
+                Verify OTP
+              }
+            </button>
+            <button
+              type="button"
+              class="etry-login__btn etry-login__btn--muted"
+              [disabled]="loading() || resendIn() > 0"
+              (click)="resendOtp()"
+            >
+              Resend OTP
+            </button>
+            @if (resendIn() > 0) {
+              <span class="etry-login__retry">Retry in {{ resendIn() }}s</span>
+            }
+          </div>
+
+          <details class="etry-login__details">
+            <summary>Referral code (optional)</summary>
+            <input
+              class="etry-login__input etry-login__input--mt"
+              type="text"
+              [formControl]="form.controls.referralCode"
+              placeholder="Friend’s code"
+            />
+          </details>
+        }
+
+        <a routerLink="/" class="etry-login__back">← Back to home</a>
+      </div>
+    </div>
+
+    <aside class="etry-login__right" aria-hidden="true">
+      <div class="etry-login__right-bg"></div>
+      <h2 class="etry-login__right-title">Step Into Your Virtual Wardrobe.</h2>
+      <div class="etry-login__story">
+        <div class="etry-login__story-card etry-login__story-card--1">
+          <span class="etry-login__story-label">Your Image</span>
+          <div class="etry-login__story-avatar" aria-hidden="true"></div>
+        </div>
+        <div class="etry-login__story-line etry-login__story-line--1"></div>
+        <div class="etry-login__story-card etry-login__story-card--2">
+          <span class="etry-login__story-label">New Outfit</span>
+          <div class="etry-login__story-shirt" aria-hidden="true"></div>
+        </div>
+        <div class="etry-login__story-line etry-login__story-line--2"></div>
+        <div class="etry-login__story-card etry-login__story-card--3">
+          <span class="etry-login__story-badge">This is how E-Tried Style!</span>
+          <div class="etry-login__story-combo" aria-hidden="true"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

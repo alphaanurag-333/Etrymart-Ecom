@@ -1,7 +1,7 @@
 const AppError = require("../utils/AppError");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { verifyAccessToken } = require("../utils/jwt");
-const { User, Vendor, VenueVendor, Admin, DeliveryBoy } = require("../models");
+const { User, Vendor, Admin } = require("../models");
 
 function readBearer(req) {
   const h = req.headers.authorization;
@@ -35,7 +35,11 @@ function protect(role, Model, select) {
       throw new AppError("Forbidden", 403);
     }
 
-    const account = await Model.findById(payload.sub).select(select);
+    let query = Model.findById(payload.sub);
+    if (select != null && String(select).trim() !== "") {
+      query = query.select(select);
+    }
+    const account = await query;
     if (!account) {
       throw new AppError("Account not found", 401);
     }
@@ -48,10 +52,38 @@ function protect(role, Model, select) {
   });
 }
 
+/** If a valid user Bearer token is present, sets `req.user`; otherwise continues without error. */
+const optionalUser = asyncHandler(async (req, res, next) => {
+  const token = readBearer(req);
+  if (!token) {
+    return next();
+  }
+  let payload;
+  try {
+    payload = verifyAccessToken(token);
+  } catch {
+    return next();
+  }
+  if (payload.role !== "user") {
+    return next();
+  }
+  const account = await User.findById(payload.sub);
+  if (!account) {
+    return next();
+  }
+  try {
+    assertActiveAccount(account);
+  } catch {
+    return next();
+  }
+  req.user = account;
+  req.auth = { role: "user", sub: payload.sub };
+  next();
+});
+
 module.exports = {
-  protectUser: protect("user", User, "-passwordHash"),
+  optionalUser,
+  protectUser: protect("user", User),
   protectVendor: protect("vendor", Vendor, "-passwordHash"),
-  protectVenueVendor: protect("venueVendor", VenueVendor, "-passwordHash"),
   protectAdmin: protect("admin", Admin, "-password"),
-  protectDeliveryBoy: protect("deliveryBoy", DeliveryBoy, "-passwordHash"),
 };

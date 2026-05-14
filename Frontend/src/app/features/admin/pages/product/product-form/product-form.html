@@ -178,117 +178,281 @@
   </div>
 
   @if (form.controls.variantType.value === 'multi') {
-    <div class="border rounded p-3">
-      <h3 class="h6 fw-bold mb-2">Variants <span class="text-danger">*</span></h3>
-      <p class="text-muted small mb-2">
-        Hold <kbd class="small">Ctrl</kbd> (or <kbd class="small">Cmd</kbd>) to select multiple variant titles. Rows are built from every combination of active values for those titles.
-      </p>
+    <div class="pf-var-card">
+      <h3 class="pf-var-title">Select variants <span class="text-danger">*</span></h3>
+      <p class="text-muted small mb-3">You can select multiple variant titles.</p>
+
       @if (activeAttributeTitles().length === 0) {
         <p class="text-muted small mb-0">No active variant titles found. Create attribute titles (status active) under Attributes.</p>
       } @else {
-        <label class="form-label small fw-semibold" for="pf-variant-titles">Variant titles</label>
-        <select
-          id="pf-variant-titles"
-          class="form-select"
-          multiple
-          [size]="variantSelectSize()"
-          (change)="onVariantTitlesMultiSelectChange($event)"
-        >
-          @for (t of activeAttributeTitles(); track t._id) {
-            <option [value]="t._id" [selected]="isTitleSelected(t._id)">{{ t.title }}</option>
-          }
-        </select>
-      }
-      @if (variantsLoading()) {
-        <p class="text-muted small mt-2 mb-0">Loading variant values…</p>
-      }
-
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 mb-2">
-        <div>
-          <h4 class="h6 fw-bold mb-0">Auto-generated variant values <span class="text-danger">*</span></h4>
-          <p class="text-muted small mb-0">Rows are auto-generated from selected titles and their active values.</p>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="variantsLoading()" (click)="refreshVariantCombinations()">
-          Refresh combinations
-        </button>
-      </div>
-
-      @if (combinations.length) {
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered align-middle mb-0 bg-white">
-            <thead class="table-light">
-              <tr>
-                <th>SKU <span class="text-danger">*</span></th>
-                @for (tid of displayVariantColumnTitleIds(); track tid) {
-                  <th>{{ attributeTitleLabel(tid) }} <span class="text-danger">*</span></th>
-                }
-                <th>Price <span class="text-danger">*</span></th>
-                <th>Stock <span class="text-danger">*</span></th>
-                <th>Discount</th>
-                <th>Status</th>
-                <th>Combo images</th>
-                <th class="text-nowrap">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of combinations.controls; track $index; let ri = $index) {
-                <tr [formGroup]="comboGroupAt(ri)">
-                  <td style="min-width: 11rem">
-                    <input class="form-control form-control-sm" formControlName="sku" autocomplete="off" />
-                  </td>
-                  @for (attr of attributeControlsAt(ri).controls; track $index; let ai = $index) {
-                    <td [formGroup]="attrGroupAt(ri, ai)">
-                      <input type="hidden" formControlName="attributeValue" />
-                      <span class="form-control form-control-sm form-control-plaintext small py-1">{{ attributeValueLabelAt(ri, ai) }}</span>
-                    </td>
-                  }
-                  <td style="min-width: 5rem">
-                    <input
-                      class="form-control form-control-sm"
-                      type="number"
-                      min="1"
-                      formControlName="price"
-                      (keydown)="blockMinusExponentKeys($event)"
-                    />
-                  </td>
-                  <td style="min-width: 4.5rem">
-                    <input
-                      class="form-control form-control-sm"
-                      type="number"
-                      min="0"
-                      formControlName="stock"
-                      (keydown)="blockMinusExponentKeys($event)"
-                    />
-                  </td>
-                  <td style="min-width: 4rem">
-                    <input
-                      class="form-control form-control-sm"
-                      type="number"
-                      min="0"
-                      formControlName="discountValue"
-                      (keydown)="blockMinusExponentKeys($event)"
-                    />
-                  </td>
-                  <td style="min-width: 5.5rem">
-                    <select class="form-select form-select-sm" formControlName="status">
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </td>
-                  <td style="min-width: 8rem">
-                    <input type="file" class="form-control form-control-sm" accept="image/*" multiple (change)="onCombinationImagesSelected(ri, $event)" />
-                  </td>
-                  <td>
-                    <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" (click)="removeCombinationRow(ri)">Remove</button>
-                  </td>
-                </tr>
+        <div class="pf-var-picker" #variantPickerRoot>
+          <div class="pf-var-chips-row">
+            <div class="pf-var-chips" aria-label="Selected variant titles">
+              @for (tid of selectedAttributeTitleIds(); track tid) {
+                <span class="pf-var-chip">
+                  <span class="pf-var-chip__text">{{ attributeTitleLabel(tid) }}</span>
+                  <button type="button" class="pf-var-chip__remove" (click)="removeVariantTitle(tid)" [attr.aria-label]="'Remove ' + attributeTitleLabel(tid)">×</button>
+                </span>
               }
-            </tbody>
-          </table>
+            </div>
+            <div class="pf-var-picker__actions">
+              @if (selectedAttributeTitleIds().length) {
+                <button type="button" class="pf-var-icon-btn" aria-label="Clear all variant titles" (click)="clearAllVariantTitles()">×</button>
+              }
+              <button
+                type="button"
+                class="pf-var-icon-btn pf-var-icon-btn--chevron"
+                [attr.aria-expanded]="variantPickerOpen()"
+                aria-label="Add variant title"
+                (click)="toggleVariantPicker($event)"
+              ></button>
+            </div>
+          </div>
+          @if (variantPickerOpen()) {
+            @if (availableTitlesForPicker().length) {
+              <div class="pf-var-dropdown" role="listbox">
+                @for (t of availableTitlesForPicker(); track t._id) {
+                  <button type="button" class="pf-var-dropdown__item" (click)="addVariantTitle(t._id)">{{ t.title }}</button>
+                }
+              </div>
+            } @else {
+              <div class="pf-var-dropdown pf-var-dropdown--empty text-muted small px-3 py-2">All variant titles are selected.</div>
+            }
+          }
         </div>
-      } @else if (selectedAttributeTitleIds().length) {
-        <p class="text-muted small mb-0">No rows yet — if values loaded, use <strong>Refresh combinations</strong> after fixing attribute values.</p>
+        <p class="text-muted small mb-0 mt-2">
+          Use <strong>Regenerate variations</strong> for every combination of active values, or <strong>Add combination row</strong> when you need custom rows or values are still loading.
+        </p>
       }
+
+      @if (variantsLoading()) {
+        <p class="text-muted small mt-3 mb-0">Loading variant values…</p>
+      }
+
+      <div class="pf-var-tabs-wrap mt-3">
+        <div class="pf-var-tabs" role="tablist" aria-label="Variant details">
+          <button
+            type="button"
+            class="pf-var-tab"
+            role="tab"
+            [class.pf-var-tab--active]="variantPanelTab() === 'variants'"
+            [attr.aria-selected]="variantPanelTab() === 'variants'"
+            (click)="setVariantPanelTab('variants')"
+          >
+            Variants
+          </button>
+          <button
+            type="button"
+            class="pf-var-tab"
+            role="tab"
+            [class.pf-var-tab--active]="variantPanelTab() === 'images'"
+            [attr.aria-selected]="variantPanelTab() === 'images'"
+            (click)="setVariantPanelTab('images')"
+          >
+            Images
+          </button>
+        </div>
+
+        @if (variantPanelTab() === 'variants') {
+          <div class="pf-var-panel" role="tabpanel">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+              <div>
+                <h4 class="h6 fw-bold mb-0">Choose variant values <span class="text-danger">*</span></h4>
+                <p class="text-muted small mb-0">Pick each dimension from the dropdowns. Regenerate builds all combos; add row creates one empty row.</p>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="variantsLoading()" (click)="refreshVariantCombinations()">
+                  Regenerate variations
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="variantsLoading()" (click)="addManualCombinationRow()">
+                  Add combination row
+                </button>
+              </div>
+            </div>
+
+            @if (combinations.length) {
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+                  <thead class="table-light">
+                    <tr>
+                      <th>SKU <span class="text-danger">*</span></th>
+                      @for (tid of displayVariantColumnTitleIds(); track tid) {
+                        <th>{{ attributeTitleLabel(tid) }} <span class="text-danger">*</span></th>
+                      }
+                      <th>Price <span class="text-danger">*</span></th>
+                      <th>Stock <span class="text-danger">*</span></th>
+                      <th>Discount</th>
+                      <th>Status</th>
+                      <th class="text-nowrap">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of combinations.controls; track $index; let ri = $index) {
+                      <tr [formGroup]="comboGroupAt(ri)">
+                        <td style="min-width: 11rem">
+                          <input class="form-control form-control-sm" formControlName="sku" autocomplete="off" />
+                        </td>
+                        @for (attr of attributeControlsAt(ri).controls; track $index; let ai = $index) {
+                          <td [formGroup]="attrGroupAt(ri, ai)" style="min-width: 8rem">
+                            <select class="form-select form-select-sm" formControlName="attributeValue">
+                              <option value="">Select {{ attributeTitleLabel(attributeTitleIdAt(ri, ai)) }}</option>
+                              @for (opt of variantValueSelectOptions(ri, ai); track opt._id) {
+                                <option [value]="opt._id">{{ opt.value }}</option>
+                              }
+                            </select>
+                          </td>
+                        }
+                        <td style="min-width: 5rem">
+                          <input
+                            class="form-control form-control-sm"
+                            type="number"
+                            min="1"
+                            formControlName="price"
+                            placeholder="Price"
+                            (keydown)="blockMinusExponentKeys($event)"
+                          />
+                        </td>
+                        <td style="min-width: 4.5rem">
+                          <input
+                            class="form-control form-control-sm"
+                            type="number"
+                            min="0"
+                            formControlName="stock"
+                            (keydown)="blockMinusExponentKeys($event)"
+                          />
+                        </td>
+                        <td style="min-width: 4rem">
+                          <input
+                            class="form-control form-control-sm"
+                            type="number"
+                            min="0"
+                            formControlName="discountValue"
+                            (keydown)="blockMinusExponentKeys($event)"
+                          />
+                        </td>
+                        <td style="min-width: 5.5rem">
+                          <select class="form-select form-select-sm" formControlName="status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                        </td>
+                        <td>
+                          <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" (click)="removeCombinationRow(ri)">Remove</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else if (selectedAttributeTitleIds().length) {
+              <p class="text-muted small mb-0">
+                No rows yet — use <strong>Regenerate variations</strong> when every title has active values, or <strong>Add combination row</strong> to build rows manually.
+              </p>
+            }
+          </div>
+        }
+
+        @if (variantPanelTab() === 'images') {
+          <div class="pf-var-panel" role="tabpanel">
+            <h4 class="h6 fw-bold mb-1">Combination images</h4>
+            <p class="text-muted small mb-2">Upload images per variation row.</p>
+
+            @if (combinations.length) {
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+                  <thead class="table-light">
+                    <tr>
+                      <th>SKU <span class="text-danger">*</span></th>
+                      @for (tid of displayVariantColumnTitleIds(); track tid) {
+                        <th>{{ attributeTitleLabel(tid) }} <span class="text-danger">*</span></th>
+                      }
+                      <th>Images</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of combinations.controls; track $index; let ri = $index) {
+                      <tr [formGroup]="comboGroupAt(ri)">
+                        <td style="min-width: 11rem">
+                          <input class="form-control form-control-sm" formControlName="sku" readonly tabindex="-1" />
+                        </td>
+                        @for (attr of attributeControlsAt(ri).controls; track $index; let ai = $index) {
+                          <td [formGroup]="attrGroupAt(ri, ai)" style="min-width: 8rem">
+                            <select class="form-select form-select-sm" formControlName="attributeValue" >
+                              <option value="">Select {{ attributeTitleLabel(attributeTitleIdAt(ri, ai)) }}</option>
+                              @for (opt of variantValueSelectOptions(ri, ai); track opt._id) {
+                                <option [value]="opt._id">{{ opt.value }}</option>
+                              }
+                            </select>
+                          </td>
+                        }
+                        <td style="min-width: 15rem">
+                          <div class="pf-combo-images">
+                            @if (existingCombinationImages(ri).length) {
+                              <div class="d-flex flex-wrap gap-1 mb-2" aria-label="Saved combination images">
+                                @for (imgUrl of existingCombinationImages(ri); track $index; let ei = $index) {
+                                  <div class="pf-combo-img-tile">
+                                    <img [src]="mediaSrc(imgUrl) ?? ''" alt="" class="pf-combo-img-tile__img" />
+                                    <button
+                                      type="button"
+                                      class="btn btn-sm btn-outline-danger pf-combo-img-tile__remove"
+                                      aria-label="Remove saved image"
+                                      (click)="removeExistingCombinationImage(ri, ei)"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                }
+                              </div>
+                            }
+                            @if (combinationPendingPreviewUrls(ri).length) {
+                              <div class="d-flex flex-wrap gap-1 mb-2" aria-label="New images to upload">
+                                @for (blob of combinationPendingPreviewUrls(ri); track $index; let fi = $index) {
+                                  <div class="pf-combo-img-tile">
+                                    <img [src]="blob" alt="" class="pf-combo-img-tile__img" />
+                                    <button
+                                      type="button"
+                                      class="btn btn-sm btn-outline-danger pf-combo-img-tile__remove"
+                                      aria-label="Remove pending image"
+                                      (click)="removeCombinationPendingFile(ri, fi)"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                }
+                              </div>
+                            }
+                            <label class="btn btn-sm btn-outline-secondary mb-0">
+                              Add images
+                              <input
+                                type="file"
+                                class="d-none"
+                                accept="image/*"
+                                multiple
+                                (click)="onCombinationFileInputClick($event)"
+                                (change)="onCombinationImagesSelected(ri, $event)"
+                              />
+                            </label>
+                            <p class="text-muted small mb-0 mt-1">
+                              {{ combinationFileCount(ri) }} new to upload
+                              @if (existingCombinationImageCount(ri)) {
+                                <span> · {{ existingCombinationImageCount(ri) }} saved on server</span>
+                              }
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else if (selectedAttributeTitleIds().length) {
+              <p class="text-muted small mb-0">No rows yet — use the <strong>Variants</strong> tab, then <strong>Regenerate variations</strong> or <strong>Add combination row</strong>.</p>
+            } @else {
+              <p class="text-muted small mb-0">Select variant titles above, then generate combinations.</p>
+            }
+          </div>
+        }
+      </div>
     </div>
   }
 

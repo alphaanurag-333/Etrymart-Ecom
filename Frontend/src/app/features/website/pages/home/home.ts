@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
           tools — all powered by this Angular 21 shell.
         </p>
         <div class="d-flex flex-wrap gap-3 mt-4">
+          <a class="btn btn-primary fw-semibold px-4" routerLink="/auth/login">Sign in</a>
           <a class="btn btn-warning fw-semibold px-4" routerLink="/contact">Talk to us</a>
           <a class="btn btn-outline-secondary px-4" routerLink="/about">Learn more</a>
         </div>

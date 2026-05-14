@@ -77,9 +77,9 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
-    title: 'Seller management',
+    title: 'Vendor management',
     items: [
-      { id: 'sellers', label: 'Sellers', path: '/admin/sellers', icon: 'user-tie' },
+      { id: 'sellers', label: 'Vendors', path: '/admin/vendors/list', icon: 'user-tie' },
       {
         id: 'withdrawal-request',
         label: 'Withdrawal requests',
@@ -98,6 +98,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     title: 'System settings',
     items: [
       { id: 'static-pages', label: 'Static pages', path: '/admin/static-pages', icon: 'file-text' },
+      { id: 'faq', label: 'FAQs', path: '/admin/faq', icon: 'info' },
       {
         id: 'app-config',
         label: 'Application settings',

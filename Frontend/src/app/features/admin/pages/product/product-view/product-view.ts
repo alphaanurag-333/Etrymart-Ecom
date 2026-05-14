@@ -3,7 +3,12 @@ import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { distinctUntilChanged, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
 import { MEDIA_URL } from '../../../../../core/config/api.config';
-import { Product, ProductService } from '../../../../../core/services/admin-service/product.service';
+import {
+  Product,
+  ProductCombination,
+  ProductService,
+  ProductVariantAttribute,
+} from '../../../../../core/services/admin-service/product.service';
 
 @Component({
   selector: 'app-product-view',
@@ -76,5 +81,64 @@ export class ProductViewPage {
 
   protected formatDiscount(p: Product): string {
     return p.discountType === 'percentage' ? `${p.discountValue}%` : this.formatMoney(p.discountValue);
+  }
+
+  protected formatCombinationDiscount(p: Product, c: ProductCombination): string {
+    const v = c.discountValue ?? 0;
+    return p.discountType === 'percentage' ? `${v}%` : this.formatMoney(v);
+  }
+
+  protected attrTitle(a: ProductVariantAttribute): string {
+    const t = a.attributeTitle;
+    if (typeof t === 'object' && t?.title) return t.title;
+    if (typeof t === 'string' && t) return t;
+    return '—';
+  }
+
+  protected attrValueLabel(a: ProductVariantAttribute): string {
+    const v = a.attributeValue;
+    if (typeof v === 'object' && v?.value) return v.value;
+    if (typeof v === 'string' && v) return v;
+    return '—';
+  }
+
+  protected variantColumnTitles(p: Product): string[] {
+    const first = p.combinations[0];
+    if (!first?.attributes?.length) return [];
+    return first.attributes.map((a) => this.attrTitle(a));
+  }
+
+  protected combinationImages(c: ProductCombination): string[] {
+    return Array.isArray(c.images) ? c.images.filter(Boolean) : [];
+  }
+
+  protected addedByLabel(p: Product): string {
+    const a = p.addedById;
+    if (typeof a === 'object' && a) {
+      return (a as { businessName?: string; name?: string }).businessName?.trim() ||
+        (a as { name?: string }).name?.trim() ||
+        a._id;
+    }
+    return typeof a === 'string' ? a : '—';
+  }
+
+  protected formatDate(iso: string | undefined): string {
+    if (!iso) return '—';
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(iso));
+    } catch {
+      return iso;
+    }
+  }
+
+  protected attributeTitlesSummary(p: Product): string {
+    const fromCombos = this.variantColumnTitles(p);
+    if (fromCombos.length) return fromCombos.join(', ');
+    const raw = p.attributeTitles;
+    if (!Array.isArray(raw) || !raw.length) return '—';
+    return `${raw.length} variant title${raw.length === 1 ? '' : 's'} (ids)`;
   }
 }

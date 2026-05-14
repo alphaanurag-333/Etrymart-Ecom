@@ -1,0 +1,192 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="vendor-form">
+  <div class="row g-3">
+    <div class="col-12">
+      <h3 class="h6 fw-bold border-bottom pb-2 mb-0">Account &amp; business</h3>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-name">Full name <span class="text-danger">*</span></label>
+      <input id="vf-name" class="form-control" formControlName="name" autocomplete="name" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <div class="invalid-feedback d-block">Name is required.</div>
+      }
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-email">Email <span class="text-danger">*</span></label>
+      <input id="vf-email" type="email" class="form-control" formControlName="email" autocomplete="email" />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <div class="invalid-feedback d-block">Valid email is required.</div>
+      }
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-phone">Phone <span class="text-danger">*</span></label>
+      <input id="vf-phone" class="form-control" formControlName="phone" autocomplete="tel" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-biz">Business name <span class="text-danger">*</span></label>
+      <input id="vf-biz" class="form-control" formControlName="businessName" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-pass">
+        Password
+        @if (!isEdit()) {
+          <span class="text-danger">*</span>
+        }
+      </label>
+      <input
+        id="vf-pass"
+        type="password"
+        class="form-control"
+        formControlName="password"
+        autocomplete="new-password"
+        [placeholder]="isEdit() ? 'Leave blank to keep current' : 'At least 8 characters'"
+      />
+      @if (form.controls.password.hasError('minPassword') && form.controls.password.touched) {
+        <div class="invalid-feedback d-block">At least 8 characters when setting a password.</div>
+      }
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-bizph">Business phone</label>
+      <input id="vf-bizph" class="form-control" formControlName="businessPhone" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-gst">GSTIN</label>
+      <input id="vf-gst" class="form-control" formControlName="gstin" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-pan">PAN number</label>
+      <input id="vf-pan" class="form-control" formControlName="panCardNumber" />
+    </div>
+    <div class="col-12">
+      <label class="form-label fw-semibold" for="vf-addr">Business address</label>
+      <textarea id="vf-addr" class="form-control" rows="2" formControlName="businessAddress"></textarea>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label fw-semibold" for="vf-gender">Gender</label>
+      <select id="vf-gender" class="form-select" formControlName="gender">
+        @for (g of genders; track g) {
+          <option [value]="g">{{ g }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label fw-semibold" for="vf-dob">Date of birth</label>
+      <input id="vf-dob" type="date" class="form-control" formControlName="dob" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-fcm">FCM device id</label>
+      <input id="vf-fcm" class="form-control" formControlName="fcm_id" />
+    </div>
+
+    <div class="col-12 mt-2">
+      <h3 class="h6 fw-bold border-bottom pb-2 mb-0">Banking</h3>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-bank">Bank name</label>
+      <input id="vf-bank" class="form-control" formControlName="bankName" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-branch">Branch name</label>
+      <input id="vf-branch" class="form-control" formControlName="branchName" />
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fw-semibold" for="vf-acct">Account number</label>
+      <input id="vf-acct" class="form-control" formControlName="accountNo" />
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fw-semibold" for="vf-ifsc">IFSC</label>
+      <input id="vf-ifsc" class="form-control" formControlName="ifsc" />
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fw-semibold" for="vf-atype">Account type</label>
+      <select id="vf-atype" class="form-select" formControlName="accountType">
+        @for (t of accountTypes; track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-12 mt-2">
+      <h3 class="h6 fw-bold border-bottom pb-2 mb-0">Admin</h3>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-status">Account status</label>
+      <select id="vf-status" class="form-select" formControlName="status">
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold" for="vf-appr">Approval</label>
+      <select id="vf-appr" class="form-select" formControlName="approvalStatus">
+        @for (a of approvals; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-12 mt-2">
+      <h3 class="h6 fw-bold border-bottom pb-2 mb-0">Documents &amp; media (uploads)</h3>
+      <p class="text-muted small mb-0">Optional. Profile uses field <code>file</code> on the API.</p>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Profile image</label>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <input type="file" class="form-control" accept="image/*" (change)="onFilePick($event, 'profile')" />
+        <span class="small text-muted text-truncate" style="max-width: 12rem">{{ fileLabel('profile') }}</span>
+        @if (profileFile) {
+          <button type="button" class="btn btn-link btn-sm p-0" (click)="clearPicked('profile')">Clear</button>
+        }
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Shop logo</label>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <input type="file" class="form-control" accept="image/*" (change)="onFilePick($event, 'shopLogo')" />
+        <span class="small text-muted">{{ fileLabel('shopLogo') }}</span>
+        @if (shopLogoFile) {
+          <button type="button" class="btn btn-link btn-sm p-0" (click)="clearPicked('shopLogo')">Clear</button>
+        }
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Shop banner</label>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <input type="file" class="form-control" accept="image/*" (change)="onFilePick($event, 'shopBanner')" />
+        <span class="small text-muted">{{ fileLabel('shopBanner') }}</span>
+        @if (shopBannerFile) {
+          <button type="button" class="btn btn-link btn-sm p-0" (click)="clearPicked('shopBanner')">Clear</button>
+        }
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Aadhaar front</label>
+      <input type="file" class="form-control" accept="image/*,application/pdf" (change)="onFilePick($event, 'aadhaarFront')" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Aadhaar back</label>
+      <input type="file" class="form-control" accept="image/*,application/pdf" (change)="onFilePick($event, 'aadhaarBack')" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">PAN card</label>
+      <input type="file" class="form-control" accept="image/*,application/pdf" (change)="onFilePick($event, 'pan')" />
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Shop images (multiple)</label>
+      <input type="file" class="form-control" accept="image/*" multiple (change)="onFilePick($event, 'shopImages')" />
+      <span class="small text-muted">{{ fileLabel('shopImages') }}</span>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-semibold">Shop videos (multiple)</label>
+      <input type="file" class="form-control" accept="video/*" multiple (change)="onFilePick($event, 'shopVideos')" />
+      <span class="small text-muted">{{ fileLabel('shopVideos') }}</span>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mt-4">
+    <button type="submit" class="btn-admin-primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Create vendor' }}
+    </button>
+    <a [routerLink]="cancelLink()" class="btn-admin-outline">Cancel</a>
+  </div>
+</form>

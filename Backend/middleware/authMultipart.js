@@ -1,4 +1,5 @@
 const createUploader = require("../utils/fileUploader");
+const { VENDOR_UPLOAD_FIELD_SPECS } = require("../utils/vendorRequestPayload");
 
 function optionalMultipart(uploadMiddleware) {
   return (req, res, next) => {
@@ -34,6 +35,7 @@ const appConfigUpload = createUploader("app-config").fields([
 ]);
 /** Thumbnail, gallery images, and dynamic combinationImages0 / combinationImages0_1, etc. */
 const productUpload = createUploader("product").any();
+const vendorUpload = createUploader("vendor").fields(VENDOR_UPLOAD_FIELD_SPECS);
 
 exports.optionalAdminFile = optionalMultipart(adminUpload);
 exports.optionalCategoryFile = optionalMultipart(categoryUpload);
@@ -43,3 +45,4 @@ exports.optionalNotificationFile = optionalMultipart(notificationUpload);
 exports.optionalTryOnBannerFile = optionalMultipart(tryOnBannerUpload);
 exports.optionalAppConfigFiles = optionalMultipart(appConfigUpload);
 exports.optionalProductFiles = optionalMultipart(productUpload);
+exports.optionalVendorFiles = optionalMultipart(vendorUpload);

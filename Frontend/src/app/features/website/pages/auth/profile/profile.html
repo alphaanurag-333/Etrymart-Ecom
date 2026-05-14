@@ -1,0 +1,186 @@
+<div class="etry-profile-root">
+  @if (loading()) {
+    <section class="etry-profile etry-profile--solo">
+      <div class="etry-profile__container">
+        <p class="etry-profile__muted">Loading profile…</p>
+      </div>
+    </section>
+  } @else if (user(); as u) {
+    <nav class="etry-profile-topnav" aria-label="Profile navigation">
+      <a routerLink="/" class="etry-profile-topnav__brand">
+        <span class="etry-profile-topnav__brand-icon" aria-hidden="true"></span>
+        <span class="etry-profile-topnav__brand-text">{{ brandTitle() }}</span>
+      </a>
+      <div class="etry-profile-topnav__end">
+        <span class="etry-profile-topnav__coins">
+          Total eTry Coins: <strong>{{ totalTryCoins(u) }}</strong>
+        </span>
+        <a routerLink="/" class="etry-profile-topnav__link">Home</a>
+        <details class="etry-profile-topnav__menu">
+          <summary class="etry-profile-topnav__summary">
+            @if (avatarPreview(); as prev) {
+              <img [src]="prev" alt="" class="etry-profile-topnav__thumb" width="32" height="32" />
+            } @else if (mediaSrc(u.profilePicture); as src) {
+              <img [src]="src" alt="" class="etry-profile-topnav__thumb" width="32" height="32" />
+            } @else {
+              <span class="etry-profile-topnav__thumb etry-profile-topnav__thumb--ph" aria-hidden="true"></span>
+            }
+            <span class="etry-profile-topnav__name">{{ displaySummary(u) }}</span>
+            <span class="etry-profile-topnav__caret" aria-hidden="true"></span>
+          </summary>
+          <div class="etry-profile-topnav__panel">
+            <a routerLink="/auth/profile" class="etry-profile-topnav__panel-item">Profile</a>
+            <a routerLink="/" class="etry-profile-topnav__panel-item">Home</a>
+            <button type="button" class="etry-profile-topnav__panel-item etry-profile-topnav__panel-item--danger" (click)="signOut()">
+              Sign out
+            </button>
+          </div>
+        </details>
+      </div>
+    </nav>
+
+    <section class="etry-profile">
+      <div class="etry-profile__container">
+        <div class="etry-profile__card">
+          <header class="etry-profile__hero">
+            <div class="etry-profile__hero-bg" aria-hidden="true"></div>
+            <div class="etry-profile__hero-inner">
+              <h1 class="etry-profile__hero-title">Edit Profile</h1>
+            </div>
+          </header>
+
+          <div class="etry-profile__body">
+            <div class="etry-profile__avatar-wrap">
+              <div class="etry-profile__avatar-ring">
+                @if (avatarPreview(); as prev) {
+                  <img [src]="prev" alt="" class="etry-profile__avatar-img" />
+                } @else if (mediaSrc(u.profilePicture); as src) {
+                  <img [src]="src" alt="" class="etry-profile__avatar-img" />
+                } @else {
+                  <div class="etry-profile__avatar-placeholder" aria-hidden="true"></div>
+                }
+              </div>
+              <button type="button" class="etry-profile__avatar-cam" (click)="pickAvatar()" aria-label="Change profile photo">
+                <span class="etry-profile__cam-icon" aria-hidden="true"></span>
+              </button>
+              <input
+                #avatarFile
+                type="file"
+                class="etry-profile__file"
+                accept="image/*"
+                tabindex="-1"
+                (change)="onAvatarFile($event)"
+              />
+            </div>
+
+            <div class="etry-profile__stat-row">
+              <div class="etry-profile__stat">
+                <span class="etry-profile__stat-icon" aria-hidden="true"></span>
+                <div>
+                  <div class="etry-profile__stat-label">Earned Coins</div>
+                  <div class="etry-profile__stat-value">{{ earnedCoins(u) }}</div>
+                </div>
+              </div>
+              <div class="etry-profile__stat">
+                <span class="etry-profile__stat-icon" aria-hidden="true"></span>
+                <div>
+                  <div class="etry-profile__stat-label">Daily Coins</div>
+                  <div class="etry-profile__stat-value">{{ dailyCoins(u) }}</div>
+                </div>
+              </div>
+            </div>
+
+            @if (!u.phoneVerified) {
+              <div class="etry-profile__banner etry-profile__verify">
+                Please <a routerLink="/auth/login" class="etry-profile__link">verify your mobile</a> to use all features.
+              </div>
+            }
+
+            @if (error()) {
+              <div class="etry-profile__alert etry-profile__alert--err" role="alert">{{ error() }}</div>
+            }
+            @if (success()) {
+              <div class="etry-profile__banner etry-profile__ok" role="status">{{ success() }}</div>
+            }
+            @if (avatarPreview()) {
+              <p class="etry-profile__hint">Photo preview is local only until an upload endpoint is connected.</p>
+            }
+
+            <form [formGroup]="form" (ngSubmit)="saveProfile()" class="etry-profile__form">
+              <div class="etry-profile__grid">
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-name">Full Name <span class="etry-profile__req">*</span></label>
+                  <input id="pf-name" class="etry-profile__input" type="text" formControlName="name" />
+                </div>
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-email">Email <span class="etry-profile__req">*</span></label>
+                  <input id="pf-email" class="etry-profile__input" type="email" formControlName="email" autocomplete="email" />
+                </div>
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-mobile">Mobile <span class="etry-profile__req">*</span></label>
+                  <input id="pf-mobile" class="etry-profile__input" type="tel" formControlName="mobile" readonly />
+                </div>
+
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-country">Country <span class="etry-profile__req">*</span></label>
+                  <select id="pf-country" class="etry-profile__input" formControlName="country" (change)="onCountryChange()">
+                    @for (c of countries; track c) {
+                      <option [value]="c">{{ c }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-state">State <span class="etry-profile__req">*</span></label>
+                  <select id="pf-state" class="etry-profile__input" formControlName="state" (change)="onStateChange()">
+                    @for (s of states(); track s) {
+                      <option [value]="s">{{ s }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-city">City <span class="etry-profile__req">*</span></label>
+                  <select id="pf-city" class="etry-profile__input" formControlName="city">
+                    @for (ct of cities(); track ct) {
+                      <option [value]="ct">{{ ct }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-pin">Pincode</label>
+                  <input id="pf-pin" class="etry-profile__input" type="text" inputmode="numeric" maxlength="10" formControlName="pincode" />
+                </div>
+                <div class="etry-profile__field">
+                  <label class="etry-profile__label" for="pf-gender">Gender <span class="etry-profile__req">*</span></label>
+                  <select id="pf-gender" class="etry-profile__input" formControlName="gender">
+                    @for (g of genders; track g) {
+                      <option [value]="g">{{ g | titlecase }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="etry-profile__actions">
+                <button type="button" class="etry-profile__btn etry-profile__btn--ghost" (click)="cancelEdit()" [disabled]="saving()">
+                  Cancel
+                </button>
+                <button type="submit" class="etry-profile__btn etry-profile__btn--primary" [disabled]="saving() || form.invalid">
+                  @if (saving()) {
+                    Updating…
+                  } @else {
+                    Update
+                  }
+                </button>
+              </div>
+            </form>
+
+            <div class="etry-profile__footer">
+              <button type="button" class="etry-profile__link-btn" (click)="signOut()">Sign out</button>
+              <a routerLink="/" class="etry-profile__home-link">← Back to home</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+</div>

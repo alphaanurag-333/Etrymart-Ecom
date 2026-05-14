@@ -1,44 +1,73 @@
 <div class="web-shell">
-  <header class="border-bottom bg-white bg-opacity-90 shadow-sm sticky-top">
-    <nav class="navbar navbar-expand-lg navbar-light container py-2">
-      <a routerLink="/" class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark">
-        <span class="web-brand-mark" aria-hidden="true"></span>
-        EtryMart
+  @if (mobileOpen()) {
+    <div
+      class="web-header__backdrop"
+      aria-hidden="true"
+      (click)="closeMobile()"
+    ></div>
+  }
+
+  <header class="web-header">
+    <div class="container web-header__bar" #headerBar>
+      <a routerLink="/" class="web-logo" [attr.title]="brandTitle() + ' — Home'">
+        @if (storefrontLogoUrl(); as logo) {
+          <img class="web-logo__img" [src]="logo" [alt]="brandTitle()" width="40" height="40" />
+        } @else {
+          <span class="web-logo__mark" aria-hidden="true"></span>
+        }
+        <span class="web-logo__text">{{ brandTitle() }}</span>
       </a>
 
-      <button
-        class="navbar-toggler"
-        type="button"
-        aria-controls="webNav"
-        [attr.aria-expanded]="mobileOpen()"
-        aria-label="Toggle navigation"
-        (click)="toggleMobile()"
+      <nav
+        id="webPrimaryNav"
+        class="web-header__nav"
+        [class.web-header__nav--open]="mobileOpen()"
+        aria-label="Primary"
       >
-        <span class="navbar-toggler-icon"></span>
-      </button>
+        @for (item of nav; track item.id) {
+          <a
+            class="web-header__link"
+            [routerLink]="item.path"
+            routerLinkActive="web-header__link--active"
+            [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+            (click)="closeMobile()"
+          >
+            {{ item.label }}
+          </a>
+        }
+      </nav>
 
-      <div
-        class="collapse navbar-collapse"
-        id="webNav"
-        [class.show]="mobileOpen()"
-      >
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-2">
-          @for (item of nav; track item.id) {
-            <li class="nav-item">
-              <a
-                class="nav-link rounded px-lg-2"
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-                (click)="closeMobile()"
-              >
-                {{ item.label }}
-              </a>
-            </li>
-          }
-        </ul>
+      <div class="web-header__actions">
+        @if (isStorefrontAuth()) {
+          <details class="web-user-menu">
+            <summary class="web-user-menu__summary">{{ customerLabel() }}</summary>
+            <div class="web-user-menu__panel">
+              <a routerLink="/auth/profile" class="web-user-menu__item" (click)="closeMobile()">Profile</a>
+              @if (!isPhoneVerified()) {
+                <a routerLink="/auth/login" class="web-user-menu__item" (click)="closeMobile()">Verify phone</a>
+              }
+              <a routerLink="/seller/login" class="web-user-menu__item" (click)="closeMobile()">Seller sign in</a>
+              <button type="button" class="web-user-menu__item web-user-menu__item--btn" (click)="logoutCustomer()">
+                Sign out
+              </button>
+            </div>
+          </details>
+        } @else {
+          <a routerLink="/auth/login" class="btn web-header__signin" (click)="closeMobile()">Sign in</a>
+        }
+        <!-- <a routerLink="/seller/login" class="web-header__sell-link" (click)="closeMobile()">Sell</a> -->
+        <button
+          type="button"
+          class="web-header__toggler"
+          aria-controls="webPrimaryNav"
+          [attr.aria-expanded]="mobileOpen()"
+          aria-label="Toggle navigation"
+          (click)="toggleMobile($event)"
+        >
+          <span class="web-header__toggler-bar" aria-hidden="true"></span>
+        </button>
       </div>
-    </nav>
+    </div>
   </header>
 
   <main class="web-main">
@@ -51,8 +80,127 @@
   </main>
 
   <footer class="web-footer">
-    <div class="container text-center text-muted small">
-      © {{ year }} EtryMart. All rights reserved.
+    <div class="container web-footer__main">
+      <div class="web-footer__col web-footer__brand-col">
+        <a routerLink="/" class="web-footer__logo-link">
+          @if (storefrontLogoUrl(); as flogo) {
+            <img class="web-footer__logo-img" [src]="flogo" [alt]="brandTitle()" width="48" height="48" />
+          } @else {
+            <span class="web-footer__logo-mark" aria-hidden="true"></span>
+          }
+          <span class="web-footer__logo-text">{{ brandTitle() }}</span>
+        </a>
+        <p class="web-footer__tagline">{{ storefrontTagline() }}</p>
+        <h3 class="web-footer__heading">Social links</h3>
+        <ul class="web-footer__social">
+          @if (socialFacebook(); as href) {
+            <li>
+              <a
+                class="web-footer__social-link web-footer__social-link--fb"
+                [href]="href"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="visually-hidden">Facebook</span>
+              </a>
+            </li>
+          }
+          @if (socialInstagram(); as href) {
+            <li>
+              <a
+                class="web-footer__social-link web-footer__social-link--ig"
+                [href]="href"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="visually-hidden">Instagram</span>
+              </a>
+            </li>
+          }
+          @if (socialTwitter(); as href) {
+            <li>
+              <a
+                class="web-footer__social-link web-footer__social-link--tw"
+                [href]="href"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="visually-hidden">X / Twitter</span>
+              </a>
+            </li>
+          }
+          @if (socialLinkedin(); as href) {
+            <li>
+              <a
+                class="web-footer__social-link web-footer__social-link--li"
+                [href]="href"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="visually-hidden">LinkedIn</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="web-footer__col">
+        <h3 class="web-footer__heading">Quick links</h3>
+        <ul class="web-footer__list">
+          @for (link of footerQuickLinks; track link.label) {
+            <li>
+              <a class="web-footer__list-link" [routerLink]="link.path">{{ link.label }}</a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="web-footer__col">
+        <h3 class="web-footer__heading">Customer service</h3>
+        <ul class="web-footer__list">
+          @for (link of footerServiceLinks; track link.label) {
+            <li>
+              <a class="web-footer__list-link" [routerLink]="link.path">{{ link.label }}</a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="web-footer__col">
+        <h3 class="web-footer__heading">Contact us</h3>
+        <ul class="web-footer__contact">
+          @if (storefrontPhone(); as phone) {
+            <li class="web-footer__contact-item">
+              <span class="web-footer__contact-icon web-footer__contact-icon--phone" aria-hidden="true"></span>
+              <a class="web-footer__contact-text" [href]="telHref(phone)">{{ phone }}</a>
+            </li>
+          }
+          @if (storefrontEmail(); as email) {
+            <li class="web-footer__contact-item">
+              <span class="web-footer__contact-icon web-footer__contact-icon--email" aria-hidden="true"></span>
+              <a class="web-footer__contact-text" [href]="'mailto:' + email">{{ email }}</a>
+            </li>
+          }
+          @if (storefrontAddress(); as addr) {
+            <li class="web-footer__contact-item">
+              <span class="web-footer__contact-icon web-footer__contact-icon--addr" aria-hidden="true"></span>
+              <span class="web-footer__contact-text">{{ addr }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="web-footer__bottom">
+      <div class="container web-footer__bottom-inner">
+        <p class="web-footer__copyright">{{ footerLine() }}</p>
+      </div>
     </div>
   </footer>
+
+  @if (showBackTop()) {
+    <button type="button" class="web-back-top" aria-label="Back to top" (click)="scrollToTop()">
+      <span class="web-back-top__icon" aria-hidden="true"></span>
+    </button>
+  }
 </div>

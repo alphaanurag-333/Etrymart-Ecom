@@ -1,5 +1,17 @@
-import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormArray,
@@ -10,7 +22,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, fromEvent, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { MEDIA_URL } from '../../../../../core/config/api.config';
@@ -62,7 +74,7 @@ type CombinationRowForm = FormGroup & {
   selector: 'app-product-form',
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './product-form.html',
-  styleUrls: ['../../../admin.css'],
+  styleUrls: ['../../../admin.css', './product-form.css'],
 })
 export class ProductFormComponent {
   /** When set, form loads product and submits as PATCH. */
@@ -76,6 +88,8 @@ export class ProductFormComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
+  private readonly variantPickerRoot = viewChild<ElementRef<HTMLElement>>('variantPickerRoot');
 
   protected readonly discountTypes = DISCOUNT_TYPES;
   protected readonly taxTypes = TAX_TYPES;
@@ -101,6 +115,11 @@ export class ProductFormComponent {
   protected readonly existingGalleryUrls = signal<string[]>([]);
   protected readonly thumbnailBlobPreview = signal<string | null>(null);
   protected readonly combinationRowFiles = signal<Record<number, File[]>>({});
+  /** Object URLs for pending combination row files (must revoke on remove / destroy). */
+  private readonly combinationRowPreviewUrls = signal<Record<number, string[]>>({});
+
+  protected readonly variantPanelTab = signal<'variants' | 'images'>('variants');
+  protected readonly variantPickerOpen = signal(false);
 
   protected readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(200)]),
@@ -140,7 +159,9 @@ export class ProductFormComponent {
       if (vt === 'single') {
         this.clearCombinations();
         this.selectedAttributeTitleIds.set([]);
-        this.combinationRowFiles.set({});
+        this.clearCombinationRowUploadState();
+        this.variantPanelTab.set('variants');
+        this.variantPickerOpen.set(false);
       }
     });
     this.form.controls.discountType.valueChanges.subscribe(() => {
@@ -163,7 +184,20 @@ export class ProductFormComponent {
     this.destroyRef.onDestroy(() => {
       this.revokeGalleryPreviews();
       this.revokeThumbnailBlob();
+      this.clearCombinationRowUploadState();
     });
+
+    fromEvent(this.document, 'click')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event: Event) => {
+        if (!this.variantPickerOpen()) return;
+        const root = this.variantPickerRoot()?.nativeElement;
+        if (!root) return;
+        const target = event.target;
+        if (target instanceof Node && !root.contains(target)) {
+          this.variantPickerOpen.set(false);
+        }
+      });
   }
 
   protected isEdit(): boolean {
@@ -188,21 +222,170 @@ export class ProductFormComponent {
     return typeof ref === 'string' ? ref : ref._id;
   }
 
-  protected isTitleSelected(id: string): boolean {
-    return this.selectedAttributeTitleIds().includes(id);
+  /** Titles not yet selected (for add dropdown). */
+  protected readonly availableTitlesForPicker = computed(() => {
+    const sel = new Set(this.selectedAttributeTitleIds());
+    return this.activeAttributeTitles().filter((t) => !sel.has(t._id));
+  });
+
+  protected setVariantPanelTab(tab: 'variants' | 'images'): void {
+    this.variantPanelTab.set(tab);
   }
 
-  /** Native `<select multiple>`: keep column order aligned with the active-titles list order. */
-  protected onVariantTitlesMultiSelectChange(event: Event): void {
-    if (this.form.controls.variantType.value !== 'multi') return;
-    const sel = event.target as HTMLSelectElement;
-    const raw = Array.from(sel.selectedOptions, (o) => o.value);
-    const sorted = this.sortTitleIdsByDisplayOrder(raw);
-    this.selectedAttributeTitleIds.set(sorted);
-    this.clearCombinations();
+  protected toggleVariantPicker(event?: Event): void {
+    event?.stopPropagation();
+    this.variantPickerOpen.update((v) => !v);
+  }
+
+  protected closeVariantPicker(): void {
+    this.variantPickerOpen.set(false);
+  }
+
+  protected combinationFileCount(rowIndex: number): number {
+    return this.combinationRowFiles()[rowIndex]?.length ?? 0;
+  }
+
+  protected existingCombinationImageCount(rowIndex: number): number {
+    return this.existingCombinationImages(rowIndex).length;
+  }
+
+  /** Server-side image paths already on this combination (edit). */
+  protected existingCombinationImages(rowIndex: number): string[] {
+    const g = this.comboGroupAt(rowIndex) as CombinationRowForm;
+    const list = g.controls.existingImages?.getRawValue();
+    return Array.isArray(list) ? list.map(String).filter(Boolean) : [];
+  }
+
+  protected removeExistingCombinationImage(rowIndex: number, imageIndex: number): void {
+    const row = this.combinations.at(rowIndex) as CombinationRowForm;
+    const cur = this.existingCombinationImages(rowIndex);
+    if (imageIndex < 0 || imageIndex >= cur.length) return;
+    const next = cur.filter((_, i) => i !== imageIndex);
+    row.controls.existingImages.setValue(next);
+  }
+
+  protected combinationPendingPreviewUrls(rowIndex: number): string[] {
+    return this.combinationRowPreviewUrls()[rowIndex] ?? [];
+  }
+
+  protected onCombinationFileInputClick(event: Event): void {
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  protected onCombinationImagesSelected(rowIndex: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const incoming = input.files ? Array.from(input.files) : [];
+    const prev = this.combinationRowFiles()[rowIndex] ?? [];
+    const merged = this.appendUniqueFiles(prev, incoming);
+    this.replaceRowPendingCombinationFiles(rowIndex, merged);
+    input.value = '';
+  }
+
+  protected removeCombinationPendingFile(rowIndex: number, fileIndex: number): void {
+    const cur = [...(this.combinationRowFiles()[rowIndex] ?? [])];
+    if (fileIndex < 0 || fileIndex >= cur.length) return;
+    cur.splice(fileIndex, 1);
+    this.replaceRowPendingCombinationFiles(rowIndex, cur);
+  }
+
+  protected removeCombinationRow(index: number): void {
+    const previews = this.combinationRowPreviewUrls();
+    const files = this.combinationRowFiles();
+    const dropped = previews[index];
+    if (dropped?.length) this.revokeObjectUrls(dropped);
+
+    this.combinations.removeAt(index);
+
+    const nextFiles: Record<number, File[]> = {};
+    const nextPreviews: Record<number, string[]> = {};
+    Object.entries(files).forEach(([k, v]) => {
+      const i = Number(k);
+      if (i < index) {
+        nextFiles[i] = v;
+        const pu = previews[i];
+        if (pu?.length) nextPreviews[i] = pu;
+      } else if (i > index) {
+        nextFiles[i - 1] = v;
+        const pu = previews[i];
+        if (pu?.length) nextPreviews[i - 1] = pu;
+      }
+    });
+    this.combinationRowFiles.set(nextFiles);
+    this.combinationRowPreviewUrls.set(nextPreviews);
+  }
+
+  private fileFingerprint(f: File): string {
+    return `${f.name}-${f.size}-${f.lastModified}`;
+  }
+
+  private appendUniqueFiles(existing: File[], more: File[]): File[] {
+    const seen = new Set(existing.map((f) => this.fileFingerprint(f)));
+    const out = [...existing];
+    for (const f of more) {
+      const k = this.fileFingerprint(f);
+      if (!seen.has(k)) {
+        seen.add(k);
+        out.push(f);
+      }
+    }
+    return out;
+  }
+
+  private replaceRowPendingCombinationFiles(rowIndex: number, files: File[]): void {
+    const prevUrls = this.combinationRowPreviewUrls()[rowIndex];
+    if (prevUrls?.length) this.revokeObjectUrls(prevUrls);
+    const nextUrls = files.map((f) => URL.createObjectURL(f));
+    this.combinationRowPreviewUrls.update((m) => {
+      const next = { ...m };
+      if (files.length === 0) delete next[rowIndex];
+      else next[rowIndex] = nextUrls;
+      return next;
+    });
+    this.combinationRowFiles.update((m) => {
+      const next = { ...m };
+      if (files.length === 0) delete next[rowIndex];
+      else next[rowIndex] = files;
+      return next;
+    });
+  }
+
+  private clearCombinationRowUploadState(): void {
+    for (const urls of Object.values(this.combinationRowPreviewUrls())) {
+      if (urls?.length) this.revokeObjectUrls(urls);
+    }
+    this.combinationRowPreviewUrls.set({});
     this.combinationRowFiles.set({});
-    if (!sorted.length) return;
-    this.loadValuesAndGenerateCombinations(sorted);
+  }
+
+  private revokeObjectUrls(urls: string[]): void {
+    for (const u of urls) {
+      try {
+        URL.revokeObjectURL(u);
+      } catch {
+        /* noop */
+      }
+    }
+  }
+
+  protected addVariantTitle(titleId: string): void {
+    if (this.form.controls.variantType.value !== 'multi') return;
+    const cur = this.selectedAttributeTitleIds();
+    if (cur.includes(titleId)) return;
+    const sorted = this.sortTitleIdsByDisplayOrder([...cur, titleId]);
+    this.applyVariantTitleSelection(sorted);
+    this.variantPickerOpen.set(false);
+  }
+
+  protected removeVariantTitle(titleId: string): void {
+    if (this.form.controls.variantType.value !== 'multi') return;
+    const sorted = this.sortTitleIdsByDisplayOrder(this.selectedAttributeTitleIds().filter((id) => id !== titleId));
+    this.applyVariantTitleSelection(sorted);
+  }
+
+  protected clearAllVariantTitles(): void {
+    if (this.form.controls.variantType.value !== 'multi') return;
+    this.applyVariantTitleSelection([]);
+    this.variantPickerOpen.set(false);
   }
 
   /** Re-fetch values and rebuild the Cartesian product of variant rows. */
@@ -212,15 +395,58 @@ export class ProductFormComponent {
       void Swal.fire({ icon: 'info', title: 'Select variants', text: 'Choose at least one variant title first.' });
       return;
     }
+    this.variantPanelTab.set('variants');
     this.loadValuesAndGenerateCombinations(titles);
   }
 
-  protected variantSelectSize(): number {
-    const n = this.activeAttributeTitles().length;
-    return Math.min(Math.max(n, 3), 10);
+  /** Active values for dropdown; includes current value if missing from active list (e.g. inactive on edit). */
+  protected variantValueSelectOptions(rowIndex: number, attrIndex: number): AttributeValue[] {
+    const tid = this.attributeTitleIdAt(rowIndex, attrIndex);
+    const list = this.valuesForTitle(tid);
+    const active = list.filter((v) => v.status === 'active');
+    const base = active.length > 0 ? active : list;
+    const cur = String(
+      (this.attributeControlsAt(rowIndex).at(attrIndex) as FormGroup).get('attributeValue')?.value ?? '',
+    );
+    const chosen = list.find((v) => v._id === cur);
+    if (chosen && !base.some((v) => v._id === chosen._id)) {
+      return [chosen, ...base];
+    }
+    return base;
   }
 
-  /** Column order for the combinations table (matches row attribute order). */
+  /** Add one empty combination row (dropdowns per selected title) when auto-generation is not possible or for custom combos. */
+  protected addManualCombinationRow(): void {
+    if (this.form.controls.variantType.value !== 'multi') return;
+    const titleIds = this.selectedAttributeTitleIds();
+    if (!titleIds.length) {
+      void Swal.fire({ icon: 'info', title: 'Select variants', text: 'Choose at least one variant title first.' });
+      return;
+    }
+    titleIds.forEach((tid) => this.ensureValuesLoaded(tid));
+    const attrs = this.fb.array(
+      titleIds.map((tid) =>
+        this.fb.group({
+          attributeTitle: this.fb.nonNullable.control(tid),
+          attributeValue: this.fb.control<string>('', { validators: [Validators.required] }),
+        }),
+      ),
+    );
+    const skuBase = Date.now();
+    const basePrice = Number(this.form.controls.price.value) || 1;
+    const baseStock = Number(this.form.controls.stock.value) || 0;
+    const row = this.fb.group({
+      sku: this.fb.nonNullable.control(this.makeVariantSku(skuBase), [Validators.required]),
+      price: this.fb.nonNullable.control(basePrice, [Validators.required, Validators.min(1)]),
+      discountValue: this.fb.nonNullable.control(0, [Validators.min(0)]),
+      stock: this.fb.nonNullable.control(baseStock, [Validators.min(0)]),
+      status: this.fb.nonNullable.control<CategoryStatus>('active'),
+      attributes: attrs,
+      existingImages: this.fb.nonNullable.control<string[]>([]),
+    }) as CombinationRowForm;
+    this.combinations.push(row);
+    this.variantPanelTab.set('variants');
+  }
   protected displayVariantColumnTitleIds(): string[] {
     if (this.combinations.length === 0) return this.selectedAttributeTitleIds();
     const n = this.attributeControlsAt(0).length;
@@ -229,14 +455,6 @@ export class ProductFormComponent {
       out.push(this.attributeTitleIdAt(0, i));
     }
     return out;
-  }
-
-  protected attributeValueLabelAt(rowIndex: number, attrIndex: number): string {
-    const tid = this.attributeTitleIdAt(rowIndex, attrIndex);
-    const g = this.attributeControlsAt(rowIndex).at(attrIndex) as FormGroup;
-    const vid = String(g.get('attributeValue')?.value ?? '');
-    const v = this.valuesForTitle(tid).find((x) => x._id === vid);
-    return v?.value ?? (vid || '—');
   }
 
   protected comboGroupAt(i: number): FormGroup {
@@ -252,7 +470,20 @@ export class ProductFormComponent {
     if (this.form.controls.variantType.value === 'single') {
       this.clearCombinations();
       this.selectedAttributeTitleIds.set([]);
+      this.clearCombinationRowUploadState();
+      this.variantPanelTab.set('variants');
+      this.variantPickerOpen.set(false);
     }
+  }
+
+  /** Apply sorted title ids: clear rows/files, then load + generate when non-empty. */
+  private applyVariantTitleSelection(sortedIds: string[]): void {
+    if (this.form.controls.variantType.value !== 'multi') return;
+    this.selectedAttributeTitleIds.set(sortedIds);
+    this.clearCombinations();
+    this.clearCombinationRowUploadState();
+    if (!sortedIds.length) return;
+    this.loadValuesAndGenerateCombinations(sortedIds);
   }
 
   protected onDiscountTypeChange(): void {
@@ -283,25 +514,6 @@ export class ProductFormComponent {
     this.revokeGalleryPreviews();
     this.galleryFiles.set(files);
     this.galleryPreviews.set(files.map((f) => URL.createObjectURL(f)));
-  }
-
-  protected onCombinationImagesSelected(rowIndex: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const files = input.files ? Array.from(input.files) : [];
-    this.combinationRowFiles.update((m) => ({ ...m, [rowIndex]: files }));
-  }
-
-  protected removeCombinationRow(index: number): void {
-    this.combinations.removeAt(index);
-    this.combinationRowFiles.update((m) => {
-      const next: Record<number, File[]> = {};
-      Object.entries(m).forEach(([k, v]) => {
-        const i = Number(k);
-        if (i < index) next[i] = v;
-        else if (i > index) next[i - 1] = v;
-      });
-      return next;
-    });
   }
 
   protected attributeTitleLabel(id: string): string {
@@ -350,12 +562,13 @@ export class ProductFormComponent {
     const attributeTitles = vt === 'multi' ? [...this.selectedAttributeTitleIds()] : ([] as string[]);
     const id = this.productId();
     const comboFiles = this.combinationRowFiles();
-    const combinationImages =
+    const combinationImageGroups =
       Object.keys(comboFiles).length > 0
         ? Object.entries(comboFiles)
             .map(([k, files]) => ({ comboIndex: Number(k), files }))
             .filter((x) => x.files.length > 0)
-        : undefined;
+        : [];
+    const combinationImages = combinationImageGroups.length ? combinationImageGroups : undefined;
 
     const galleryList = this.galleryFiles();
     const imagesForUpdate =
@@ -450,7 +663,7 @@ export class ProductFormComponent {
     this.revokeThumbnailBlob();
     this.galleryFiles.set([]);
     this.revokeGalleryPreviews();
-    this.combinationRowFiles.set({});
+    this.clearCombinationRowUploadState();
     this.existingThumbnailUrl.set(row.thumbnail);
     this.existingGalleryUrls.set(row.images ?? []);
     const catId = this.refId(row.category as string | { _id: string });
@@ -491,7 +704,7 @@ export class ProductFormComponent {
     this.revokeThumbnailBlob();
     this.galleryFiles.set([]);
     this.revokeGalleryPreviews();
-    this.combinationRowFiles.set({});
+    this.clearCombinationRowUploadState();
     this.existingThumbnailUrl.set(null);
     this.existingGalleryUrls.set([]);
     this.selectedAttributeTitleIds.set([]);
@@ -598,7 +811,10 @@ export class ProductFormComponent {
         row.attributes.map((a) =>
           this.fb.group({
             attributeTitle: this.fb.nonNullable.control(this.refId(a.attributeTitle)),
-            attributeValue: this.fb.nonNullable.control(this.refId(a.attributeValue), [Validators.required]),
+            attributeValue: this.fb.control<string>(this.refId(a.attributeValue), {
+              nonNullable: true,
+              validators: [Validators.required],
+            }),
           }),
         ),
       );
@@ -679,15 +895,16 @@ export class ProductFormComponent {
     const arrays = titleIds.map((id) => activeVals(id));
     if (arrays.some((a) => a.length === 0)) {
       void Swal.fire({
-        icon: 'warning',
+        icon: 'info',
         title: 'Variant values',
-        text: 'Each selected variant must have at least one active value. Add values under Attributes in admin, then try again.',
+        text:
+          'One or more selected variant titles have no active values yet. Add active values under Attributes, or use "Add combination row" to create a row and pick values from the dropdowns.',
       });
       return;
     }
-    const combos = this.cartesianProduct(arrays);
+    this.clearCombinationRowUploadState();
     this.clearCombinations();
-    this.combinationRowFiles.set({});
+    const combos = this.cartesianProduct(arrays);
     const basePrice = Number(this.form.controls.price.value) || 1;
     const baseStock = Number(this.form.controls.stock.value) || 0;
     const skuBase = Date.now();
@@ -697,7 +914,10 @@ export class ProductFormComponent {
           const val = combo[i] as AttributeValue;
           return this.fb.group({
             attributeTitle: this.fb.nonNullable.control(tid),
-            attributeValue: this.fb.nonNullable.control(val._id, [Validators.required]),
+            attributeValue: this.fb.control<string>(val._id, {
+              nonNullable: true,
+              validators: [Validators.required],
+            }),
           });
         }),
       );

@@ -149,9 +149,31 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'users',
-    loadComponent: () => import('./pages/admin-users/admin-users').then((m) => m.AdminUsersPage),
-    title: 'Users · Admin',
     data: { breadcrumb: 'Users' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'list' },
+      {
+        path: 'list',
+        loadComponent: () =>
+          import('./pages/admin-user-management/user-list/user-list').then((m) => m.AdminUserListPage),
+        title: 'Users · Admin',
+        data: { breadcrumb: 'Users' },
+      },
+      {
+        path: ':id/edit',
+        loadComponent: () =>
+          import('./pages/admin-user-management/user-edit/user-edit').then((m) => m.AdminUserEditPage),
+        title: 'Edit user · Admin',
+        data: { breadcrumb: 'Edit user' },
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import('./pages/admin-user-management/user-view/user-view').then((m) => m.AdminUserViewPage),
+        title: 'User · Admin',
+        data: { breadcrumb: 'User' },
+      },
+    ],
   },
   {
     path: 'history',
@@ -173,9 +195,43 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'sellers',
-    loadComponent: loadPlaceholder,
-    title: 'Sellers · Admin',
-    data: { breadcrumb: 'Sellers' },
+    pathMatch: 'full',
+    redirectTo: 'vendors/list',
+  },
+  {
+    path: 'vendors',
+    data: { breadcrumb: 'Vendors' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'list' },
+      {
+        path: 'list',
+        loadComponent: () =>
+          import('./pages/admin-vendor-management/vendor-list/vendor-list').then((m) => m.AdminVendorListPage),
+        title: 'Vendors · Admin',
+        data: { breadcrumb: 'Vendors' },
+      },
+      {
+        path: 'new',
+        loadComponent: () =>
+          import('./pages/admin-vendor-management/vendor-create/vendor-create').then((m) => m.AdminVendorCreatePage),
+        title: 'Add vendor · Admin',
+        data: { breadcrumb: 'Add vendor' },
+      },
+      {
+        path: ':id/edit',
+        loadComponent: () =>
+          import('./pages/admin-vendor-management/vendor-edit/vendor-edit').then((m) => m.AdminVendorEditPage),
+        title: 'Edit vendor · Admin',
+        data: { breadcrumb: 'Edit vendor' },
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import('./pages/admin-vendor-management/vendor-view/vendor-view').then((m) => m.AdminVendorViewPage),
+        title: 'Vendor · Admin',
+        data: { breadcrumb: 'Vendor' },
+      },
+    ],
   },
   {
     path: 'withdrawal-request',
@@ -201,6 +257,12 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/admin-pages/admin-static-pages').then((m) => m.AdminStaticPagesPage),
     title: 'Static pages · Admin',
     data: { breadcrumb: 'Static pages' },
+  },
+  {
+    path: 'faq',
+    loadComponent: () => import('./pages/admin-faq/admin-faq').then((m) => m.AdminFaqPage),
+    title: 'FAQs · Admin',
+    data: { breadcrumb: 'FAQs' },
   },
   {
     path: 'app-config',

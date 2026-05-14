@@ -1,19 +1,36 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
 
 const { Schema } = mongoose;
+
+const REFERRAL_ENTRY_STATUS = ["pending", "successful"];
 
 const userSchema = new Schema(
   {
     name: {
       type: String,
+      trim: true,
+      default: "",
     },
+    /** Omit until the user sets a real address; never store "" (breaks unique index). */
     email: {
       type: String,
+      trim: true,
+      lowercase: true,
+      sparse: true,
+      unique: true,
     },
+    /** Set after OTP verification. Do not store `null`—omit field on guests so sparse unique works. */
     mobile: {
       type: String,
-      required: [true, "Mobile field is required"],
+      trim: true,
+      sparse: true,
+      unique: true,
+    },
+    /** Stable id from app (Keychain / Keystore); find/create guest before phone exists. */
+    deviceId: {
+      type: String,
+      trim: true,
+      sparse: true,
       unique: true,
     },
     country: {
@@ -35,10 +52,13 @@ const userSchema = new Schema(
     gender: {
       type: String,
       enum: ["male", "female", "other"],
-      default: "other",
+      default: "male",
     },
+    /** Optional legacy / extra auth; primary login should be OTP on verified mobile. */
     password: {
       type: String,
+      default: null,
+      select: false,
     },
     role: {
       type: String,
@@ -46,10 +66,27 @@ const userSchema = new Schema(
       default: "user",
       enum: ["user", "seller", "admin"],
     },
+    /** Guest = app session before phone OTP; becomes false after mobile is verified. */
+    isGuest: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    phoneVerified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    /** Store bcrypt hash only (same pattern as Vendor); never plaintext. */
     otp: {
       type: String,
-      required: true,
-      default: "0000",
+      default: null,
+      select: false,
+    },
+    otpExpire: {
+      type: Date,
+      default: null,
+      select: false,
     },
     profilePicture: {
       type: String,
@@ -103,15 +140,25 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    /** Issued when user is no longer a phone guest (or on first “real” account creation). */
     referral_code: {
       type: String,
       unique: true,
       sparse: true,
+      trim: true,
+      uppercase: true,
     },
     referred_by: {
       type: Schema.Types.ObjectId,
       ref: "User",
       default: null,
+    },
+    /** Optional: raw code user entered at signup (audit / support). */
+    referred_by_code_snapshot: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
     },
     referrals: [
       {
@@ -125,18 +172,31 @@ const userSchema = new Schema(
         },
         status: {
           type: String,
-          enum: ['pending', 'successful'],
-          default: 'pending'
-        }
+          enum: REFERRAL_ENTRY_STATUS,
+          default: "pending",
+        },
       },
     ],
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
+userSchema.index({ createdAt: -1 });
 
-
+/** Strip empty email so sparse unique index only applies to real addresses. */
+userSchema.pre("validate", function normalizeEmail(next) {
+  if (this.email === null || this.email === undefined) {
+    return next();
+  }
+  const t = String(this.email).trim().toLowerCase();
+  if (!t) {
+    this.set("email", undefined);
+  } else {
+    this.email = t;
+  }
+  next();
+});
 
 module.exports = mongoose.model("User", userSchema);

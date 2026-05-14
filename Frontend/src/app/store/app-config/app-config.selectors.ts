@@ -38,3 +38,48 @@ export const selectAppConfigAdminMerged = createSelector(
   selectAppConfigState,
   (s) => s.adminMerged,
 );
+
+function externalHref(url: string | null | undefined): string | null {
+  const t = String(url ?? '').trim();
+  if (!t) return null;
+  if (
+    t.startsWith('http://') ||
+    t.startsWith('https://') ||
+    t.startsWith('mailto:') ||
+    t.startsWith('tel:')
+  ) {
+    return t;
+  }
+  return `https://${t.replace(/^\/+/, '')}`;
+}
+
+/** Public storefront logo (`user_logo`). */
+export const selectStorefrontLogoUrl = createSelector(selectAppConfigData, (d) => {
+  const raw = d?.user_logo?.trim();
+  return raw ? resolveMediaUrl(raw) : null;
+});
+
+export const selectStorefrontTagline = createSelector(
+  selectAppConfigData,
+  (d) => d?.app_detail?.trim() || 'Your trusted marketplace for quality products.',
+);
+
+export const selectStorefrontPhone = createSelector(selectAppConfigData, (d) =>
+  d?.app_mobile?.trim() ? d.app_mobile.trim() : null,
+);
+
+export const selectStorefrontEmail = createSelector(selectAppConfigData, (d) =>
+  d?.app_email?.trim() ? d.app_email.trim() : null,
+);
+
+export const selectStorefrontAddress = createSelector(selectAppConfigData, (d) =>
+  d?.address?.trim() ? d.address.trim() : null,
+);
+
+export const selectSocialFacebook = createSelector(selectAppConfigData, (d) => externalHref(d?.facebook));
+
+export const selectSocialTwitter = createSelector(selectAppConfigData, (d) => externalHref(d?.twitter));
+
+export const selectSocialInstagram = createSelector(selectAppConfigData, (d) => externalHref(d?.instagram));
+
+export const selectSocialLinkedin = createSelector(selectAppConfigData, (d) => externalHref(d?.linkedin));
